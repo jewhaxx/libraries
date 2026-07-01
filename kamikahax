@@ -83,7 +83,7 @@ local Library = {
     Holder = nil,
     NotifHolder = nil,
     KeyListHolder = nil,
-    Watermark = nil,
+    WatermarkInstance = nil,
 
     CurrentColorpicker = nil,
     CurrentKeybind = nil,
@@ -497,8 +497,8 @@ Library.Notification = function(self, Text, Duration, Color)
 end
 
 Library.Watermark = function(self, Text)
-    if self.Watermark then
-        self.Watermark:Destroy()
+    if self.WatermarkInstance then
+        self.WatermarkInstance:Destroy()
     end
 
     local Watermark = InstanceNew("Frame")
@@ -543,7 +543,7 @@ Library.Watermark = function(self, Text)
 
     Library.MakeDraggable(Watermark)
 
-    self.Watermark = Watermark
+    self.WatermarkInstance = Watermark
     return Watermark
 end
 
