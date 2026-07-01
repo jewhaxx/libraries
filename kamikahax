@@ -205,7 +205,8 @@ local Library do
             ["Element"] = FromRGB(33, 33, 36),
             ["Hovered Element"] = FromRGB(40, 40, 43),
             ["Text"] = FromRGB(215, 215, 215),
-            ["Text Border"] = FromRGB(0, 0, 0)
+            ["Text Border"] = FromRGB(0, 0, 0),
+            ["RiskyText"] = FromRGB(255, 70, 70)
         },
 
         MenuKeybind = tostring(Enum.KeyCode.Z),
@@ -1284,6 +1285,335 @@ local Library do
         return KeybindList
     end
 
+    Library.RiskyPopup = function(self, Data)
+        Data = Data or { }
+
+        local Popup = {
+            Window = Data.Window,
+            Parent = Data.Parent,
+            Text = Data.Text or "Are you sure?",
+            ConfirmText = Data.ConfirmText or "Confirm",
+            CancelText = Data.CancelText or "Cancel",
+            WaitTime = Data.WaitTime or 2,
+            OnConfirm = Data.OnConfirm or function() end,
+            OnCancel = Data.OnCancel or function() end
+        }
+
+        local Items = { } do
+            Items["Backdrop"] = Instances:Create("TextButton", {
+                Parent = Popup.Parent.Instance,
+                AutoButtonColor = false,
+                Text = "",
+                BackgroundColor3 = FromRGB(0, 0, 0),
+                BackgroundTransparency = 0.4,
+                BorderColor3 = FromRGB(0, 0, 0),
+                BorderSizePixel = 0,
+                Size = UDim2New(1, 0, 1, 0),
+                ZIndex = 50,
+                Name = "\0"
+            })
+
+            Items["Popup"] = Instances:Create("Frame", {
+                Parent = Items["Backdrop"].Instance,
+                AnchorPoint = Vector2New(0.5, 0.5),
+                Position = UDim2New(0.5, 0, 0.5, 0),
+                Size = UDim2New(0, 280, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BackgroundColor3 = FromRGB(15, 15, 20),
+                BorderColor3 = FromRGB(10, 10, 10),
+                BorderSizePixel = 2,
+                ZIndex = 51,
+                Name = "\0"
+            })
+            Items["Popup"]:AddToTheme({ BackgroundColor3 = "Background", BorderColor3 = "Border" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Popup"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(255, 70, 70),
+                Thickness = 1,
+                Name = "\0"
+            })
+
+            Instances:Create("UIGradient", {
+                Parent = Items["Popup"].Instance,
+                Rotation = 90,
+                Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(70, 70, 70)) }
+            })
+
+            Items["AccentLine"] = Instances:Create("Frame", {
+                Parent = Items["Popup"].Instance,
+                BackgroundColor3 = FromRGB(255, 70, 70),
+                BorderColor3 = FromRGB(0, 0, 0),
+                BorderSizePixel = 0,
+                Size = UDim2New(1, 0, 0, 2),
+                ZIndex = 52,
+                Name = "\0"
+            })
+
+            Instances:Create("UIGradient", {
+                Parent = Items["AccentLine"].Instance,
+                Rotation = 90,
+                Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(120, 30, 30)) }
+            })
+
+            Instances:Create("UIPadding", {
+                Parent = Items["Popup"].Instance,
+                PaddingTop = UDimNew(0, 10),
+                PaddingBottom = UDimNew(0, 10),
+                PaddingLeft = UDimNew(0, 10),
+                PaddingRight = UDimNew(0, 10)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["Popup"].Instance,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 8)
+            })
+
+            Items["Title"] = Instances:Create("TextLabel", {
+                Parent = Items["Popup"].Instance,
+                FontFace = Library.Font,
+                Text = "RISKY FEATURE",
+                TextColor3 = FromRGB(255, 70, 70),
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 15),
+                TextXAlignment = Enum.TextXAlignment.Center,
+                BorderSizePixel = 0,
+                TextSize = 13,
+                ZIndex = 52,
+                Name = "\0",
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Title"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(0, 0, 0),
+                Name = "\0"
+            })
+
+            Items["Body"] = Instances:Create("TextLabel", {
+                Parent = Items["Popup"].Instance,
+                FontFace = Library.Font,
+                Text = Popup.Text,
+                TextColor3 = FromRGB(215, 215, 215),
+                TextWrapped = true,
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Top,
+                BorderSizePixel = 0,
+                TextSize = 12,
+                ZIndex = 52,
+                Name = "\0",
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+            Items["Body"]:AddToTheme({ TextColor3 = "Text" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Body"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(0, 0, 0),
+                Name = "\0"
+            }):AddToTheme({ Color = "Text Border" })
+
+            Items["ButtonHolder"] = Instances:Create("Frame", {
+                Parent = Items["Popup"].Instance,
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 22),
+                BorderSizePixel = 0,
+                ZIndex = 52,
+                Name = "\0",
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["ButtonHolder"].Instance,
+                FillDirection = Enum.FillDirection.Horizontal,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 8),
+                HorizontalAlignment = Enum.HorizontalAlignment.Center
+            })
+
+            Items["Confirm"] = Instances:Create("TextButton", {
+                Parent = Items["ButtonHolder"].Instance,
+                FontFace = Library.Font,
+                Text = Popup.ConfirmText .. " (2s)",
+                TextColor3 = FromRGB(180, 180, 180),
+                BackgroundColor3 = FromRGB(33, 33, 36),
+                BorderColor3 = FromRGB(10, 10, 10),
+                BorderSizePixel = 2,
+                AutoButtonColor = false,
+                Size = UDim2New(0.5, -4, 0, 22),
+                TextSize = 12,
+                ZIndex = 52,
+                Active = false,
+                Name = "\0"
+            })
+            Items["Confirm"]:AddToTheme({ BackgroundColor3 = "Element", BorderColor3 = "Border" })
+
+            Instances:Create("UIGradient", {
+                Parent = Items["Confirm"].Instance,
+                Rotation = 90,
+                Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(100, 100, 100)) }
+            })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Confirm"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(27, 27, 32),
+                Name = "\0"
+            }):AddToTheme({ Color = "Outline" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Confirm"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(0, 0, 0),
+                Name = "\0"
+            })
+
+            Items["Cancel"] = Instances:Create("TextButton", {
+                Parent = Items["ButtonHolder"].Instance,
+                FontFace = Library.Font,
+                Text = Popup.CancelText,
+                TextColor3 = FromRGB(215, 215, 215),
+                BackgroundColor3 = FromRGB(33, 33, 36),
+                BorderColor3 = FromRGB(10, 10, 10),
+                BorderSizePixel = 2,
+                AutoButtonColor = false,
+                Size = UDim2New(0.5, -4, 0, 22),
+                TextSize = 12,
+                ZIndex = 52,
+                Name = "\0"
+            })
+            Items["Cancel"]:AddToTheme({ BackgroundColor3 = "Element", BorderColor3 = "Border" })
+
+            Instances:Create("UIGradient", {
+                Parent = Items["Cancel"].Instance,
+                Rotation = 90,
+                Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(100, 100, 100)) }
+            })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Cancel"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(27, 27, 32),
+                Name = "\0"
+            }):AddToTheme({ Color = "Outline" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Cancel"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(0, 0, 0),
+                Name = "\0"
+            })
+        end
+
+        local CanConfirm = false
+        local TimeLeft = Popup.WaitTime
+
+        Items["Popup"].Instance.Size = UDim2New(0, 280, 0, 0)
+        Items["Backdrop"].Instance.BackgroundTransparency = 1
+
+        Library:Thread(function()
+            Library:Tween(Items["Backdrop"].Instance, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 0.4
+            })
+
+            Library:Tween(Items["Popup"].Instance, TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2New(0, 280, 0, 0)
+            })
+
+            while TimeLeft > 0 do
+                TimeLeft -= 0.1
+                task.wait(0.1)
+
+                if TimeLeft <= 0 then
+                    TimeLeft = 0
+                    CanConfirm = true
+                    Items["Confirm"].Instance.Text = Popup.ConfirmText
+                    Items["Confirm"].Instance.TextColor3 = FromRGB(215, 215, 215)
+                    Items["Confirm"]:ChangeItemTheme({ TextColor3 = "Text" })
+                    Items["Confirm"].Instance.Active = true
+                    break
+                else
+                    Items["Confirm"].Instance.Text = StringFormat("%s (%.1fs)", Popup.ConfirmText, TimeLeft)
+                end
+            end
+        end)
+
+        Items["Confirm"]:OnHover(function()
+            if CanConfirm then
+                Items["Confirm"]:Tween(nil, { BackgroundColor3 = FromRGB(180, 50, 50) })
+            end
+        end)
+
+        Items["Confirm"]:OnHoverLeave(function()
+            if CanConfirm then
+                Items["Confirm"]:Tween(nil, { BackgroundColor3 = Library.Theme["Element"] })
+            end
+        end)
+
+        Items["Cancel"]:OnHover(function()
+            Items["Cancel"]:Tween(nil, { BackgroundColor3 = Library.Theme["Hovered Element"] })
+        end)
+
+        Items["Cancel"]:OnHoverLeave(function()
+            Items["Cancel"]:Tween(nil, { BackgroundColor3 = Library.Theme["Element"] })
+        end)
+
+        local Close = function()
+            Library:Tween(Items["Backdrop"].Instance, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                BackgroundTransparency = 1
+            })
+
+            Library:Tween(Items["Popup"].Instance, TweenInfo.new(0.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Size = UDim2New(0, 280, 0, 0)
+            })
+
+            task.wait(0.2)
+            Items["Backdrop"]:Clean()
+        end
+
+        Items["Confirm"]:Connect("MouseButton1Down", function()
+            if not CanConfirm then
+                return
+            end
+
+            Items["Confirm"]:Tween(nil, {
+                BackgroundColor3 = FromRGB(230, 70, 70),
+                TextColor3 = FromRGB(255, 255, 255)
+            })
+
+            task.wait(0.1)
+            Close()
+            Library:SafeCall(Popup.OnConfirm)
+        end)
+
+        Items["Cancel"]:Connect("MouseButton1Down", function()
+            Close()
+            Library:SafeCall(Popup.OnCancel)
+        end)
+
+        Items["Backdrop"]:Connect("MouseButton1Down", function()
+            Close()
+            Library:SafeCall(Popup.OnCancel)
+        end)
+
+        Popup.Items = Items
+
+        function Popup:Close()
+            Close()
+        end
+
+        return Popup
+    end
+
     Library.Settings = function(self, Window)
         if not Window then
             return
@@ -1494,8 +1824,8 @@ local Library do
             Side = 2
         })
 
-        AboutSection:Label({ Name = "opioids v1", Alignment = "Center" })
-        AboutSection:Label({ Name = "Based on kamikahax", Alignment = "Center" })
+        AboutSection:Label({ Name = "opioids $$ v1", Alignment = "Center" })
+        AboutSection:Label({ Name = "Based on kimikahax", Alignment = "Center" })
         AboutSection:Divider()
         AboutSection:Label({ Name = "CREDITS:", Alignment = "Center" })
         AboutSection:Label({ Name = "unvhook (backend, frontend)", Alignment = "Center" })
@@ -3169,10 +3499,13 @@ local Library do
             Name = Data.Name or Data.name or "Section",
             Side = Data.Side or Data.side or 1,
 
+            Collapsible = Data.Collapsible or Data.collapsible or false,
+            Collapsed = Data.Collapsed or Data.collapsed or false,
+
             Elements = { }
         }
 
-        local Items = { } do 
+        local Items = { } do
             Items["Section"] = Instances:Create("Frame", {
                 Parent = Section.Page.ColumnsData[Section.Side].Instance,
                 Name = "\0",
@@ -3182,19 +3515,19 @@ local Library do
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(20, 20, 25)
             })  Items["Section"]:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
-            
+
             Instances:Create("UIStroke", {
                 Parent = Items["Section"].Instance,
                 Color = FromRGB(10, 10, 10),
                 Name = "\0",
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border
             }):AddToTheme({Color = "Border"})
-            
+
             Instances:Create("UIPadding", {
                 Parent = Items["Section"].Instance,
                 PaddingBottom = UDimNew(0, 6)
             })
-            
+
             Items["AccentLine"] = Instances:Create("Frame", {
                 Parent = Items["Section"].Instance,
                 Name = "\0",
@@ -3203,21 +3536,59 @@ local Library do
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(235, 157, 255)
             })  Items["AccentLine"]:AddToTheme({BackgroundColor3 = "Accent"})
-            
+
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
                 Rotation = 90,
                 Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
             })
-            
+
+            if Section.Collapsible then
+                Items["HeaderButton"] = Instances:Create("TextButton", {
+                    Parent = Items["Section"].Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(0, 0, 0),
+                    Text = "",
+                    AutoButtonColor = false,
+                    BackgroundTransparency = 1,
+                    Name = "\0",
+                    Size = UDim2New(1, 0, 0, 19),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                Items["Chevron"] = Instances:Create("TextLabel", {
+                    Parent = Items["HeaderButton"].Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    Text = "-",
+                    Name = "\0",
+                    Size = UDim2New(0, 12, 0, 15),
+                    AnchorPoint = Vector2New(1, 0),
+                    Position = UDim2New(1, -4, 0, 2),
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+                Items["Chevron"]:AddToTheme({TextColor3 = "Text"})
+
+                Instances:Create("UIStroke", {
+                    Parent = Items["Chevron"].Instance,
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                    Name = "\0"
+                }):AddToTheme({Color = "Text Border"})
+            end
+
             Items["Text"] = Instances:Create("TextLabel", {
-                Parent = Items["Section"].Instance,
+                Parent = Section.Collapsible and Items["HeaderButton"].Instance or Items["Section"].Instance,
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(215, 215, 215),
                 BorderColor3 = FromRGB(0, 0, 0),
                 Text = Section.Name,
                 Name = "\0",
-                Size = UDim2New(1, -12, 0, 15),
+                Size = UDim2New(1, -24, 0, 15),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Position = UDim2New(0, 4, 0, 2),
@@ -3225,13 +3596,13 @@ local Library do
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
-            
+
             Instances:Create("UIStroke", {
                 Parent = Items["Text"].Instance,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"})
-            
+
             Items["Content"] = Instances:Create("Frame", {
                 Parent = Items["Section"].Instance,
                 Name = "\0",
@@ -3240,14 +3611,55 @@ local Library do
                 BorderColor3 = FromRGB(0, 0, 0),
                 Size = UDim2New(1, -14, 1, -20),
                 BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
-            
+
             Instances:Create("UIListLayout", {
                 Parent = Items["Content"].Instance,
                 Padding = UDimNew(0, 6),
                 SortOrder = Enum.SortOrder.LayoutOrder
             })
+        end
+
+        if Section.Collapsible then
+            local CollapseSection = function(Bool)
+                Section.Collapsed = Bool
+                Items["Content"].Instance.Visible = not Bool
+                Items["Chevron"].Instance.Text = Bool and "+" or "-"
+
+                if Bool then
+                    Items["Chevron"]:Tween(nil, { TextColor3 = Library.Theme["Hovered Element"] })
+                else
+                    Items["Chevron"]:Tween(nil, { TextColor3 = Library.Theme.Text })
+                end
+            end
+
+            function Section:SetCollapsed(Bool)
+                CollapseSection(Bool)
+            end
+
+            function Section:ToggleCollapse()
+                CollapseSection(not Section.Collapsed)
+            end
+
+            Items["HeaderButton"]:Connect("MouseButton1Down", function()
+                CollapseSection(not Section.Collapsed)
+            end)
+
+            Items["HeaderButton"]:OnHover(function()
+                Items["Text"]:Tween(nil, { TextColor3 = Library.Theme.Accent })
+                Items["Chevron"]:Tween(nil, { TextColor3 = Library.Theme.Accent })
+            end)
+
+            Items["HeaderButton"]:OnHoverLeave(function()
+                Items["Text"]:Tween(nil, { TextColor3 = Library.Theme.Text })
+                Items["Chevron"]:Tween(nil, { TextColor3 = Library.Theme.Text })
+            end)
+
+            if Section.Collapsed then
+                CollapseSection(true)
+            end
         end
 
         Section.Elements = Items
@@ -3711,6 +4123,9 @@ local Library do
             Default = Data.Default or Data.default or false,
             Callback = Data.Callback or Data.callback or function() end,
 
+            Risky = Data.Risky or Data.risky or false,
+            RiskyText = Data.RiskyText or Data.riskytext or "Enabling this feature may have unintended consequences. Are you sure you want to continue?",
+
             Value = false,
             Class = "Toggle",
 
@@ -3759,9 +4174,9 @@ local Library do
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Toggle"].Instance,
                 FontFace = Library.Font,
-                TextColor3 = FromRGB(215, 215, 215),
+                TextColor3 = Toggle.Risky and FromRGB(255, 70, 70) or FromRGB(215, 215, 215),
                 TextTransparency = 0.48,
-                Text = Toggle.Name,
+                Text = Toggle.Risky and ("[!] " .. Toggle.Name) or Toggle.Name,
                 Name = "\0",
                 Size = UDim2New(1, 0, 1, 0),
                 Position = UDim2New(0, 18, 0, -1),
@@ -3771,7 +4186,13 @@ local Library do
                 BorderColor3 = FromRGB(0, 0, 0),
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+            })
+
+            if Toggle.Risky then
+                Items["Text"]:AddToTheme({ TextColor3 = "RiskyText" })
+            else
+                Items["Text"]:AddToTheme({ TextColor3 = "Text" })
+            end
 
             Instances:Create("UIStroke", {
                 Parent = Items["Text"].Instance,
@@ -3914,6 +4335,18 @@ local Library do
         end
 
         Items["Toggle"]:Connect("MouseButton1Down", function()
+            if Toggle.Risky and not Toggle.Value then
+                Library:RiskyPopup({
+                    Window = Toggle.Window,
+                    Parent = Toggle.Window.Elements["MainFrame"],
+                    Text = Toggle.RiskyText,
+                    OnConfirm = function()
+                        Toggle:Set(true)
+                    end
+                })
+                return
+            end
+
             Toggle:Set()
         end)
 
@@ -3938,6 +4371,9 @@ local Library do
 
             Name = Data.Name or Data.name,
             Callback = Data.Callback or Data.callback or function() end,
+
+            Risky = Data.Risky or Data.risky or false,
+            RiskyText = Data.RiskyText or Data.riskytext or "Performing this action may have unintended consequences. Are you sure you want to continue?",
         }
 
         local Items = { } do 
@@ -3970,9 +4406,9 @@ local Library do
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Button"].Instance,
                 FontFace = Library.Font,
-                TextColor3 = FromRGB(215, 215, 215),
+                TextColor3 = Button.Risky and FromRGB(255, 70, 70) or FromRGB(215, 215, 215),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Text = Button.Name,
+                Text = Button.Risky and ("[!] " .. Button.Name) or Button.Name,
                 Name = "\0",
                 Size = UDim2New(1, 0, 1, 0),
                 BackgroundTransparency = 1,
@@ -3981,7 +4417,13 @@ local Library do
                 BorderSizePixel = 0,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+            })
+
+            if Button.Risky then
+                Items["Text"]:AddToTheme({ TextColor3 = "RiskyText" })
+            else
+                Items["Text"]:AddToTheme({ TextColor3 = "Text" })
+            end
             
             Items["TextBorder"] = Instances:Create("UIStroke", {
                 Parent = Items["Text"].Instance,
@@ -4023,6 +4465,18 @@ local Library do
         end
 
         Items["Button"]:Connect("MouseButton1Down", function()
+            if Button.Risky then
+                Library:RiskyPopup({
+                    Window = Button.Window,
+                    Parent = Button.Window.Elements["MainFrame"],
+                    Text = Button.RiskyText,
+                    OnConfirm = function()
+                        Button:Press()
+                    end
+                })
+                return
+            end
+
             Button:Press()
         end)
 
