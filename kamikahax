@@ -1,9 +1,10 @@
--- kimikahax
+-- opioids $$ v1 [free lib]
 --[[
-    Remake based on thugsense (by samet) + vaderhaxx patterns
+    Remake based on kamihax (by samet)
+
+    You can use the font module to load custom fonts and then call them by Library:SetFont(Font: String, Weight: Integer, Default: Bool)
 
     Assign different flags to each element to prevent from configs overriding eachother
-    Example script is at the bottom
 
     Documentation:
     function Library:Window(Data: table
@@ -1493,11 +1494,12 @@ local Library do
             Side = 2
         })
 
-        AboutSection:Label({ Name = "kimikahax v1.0.0", Alignment = "Center" })
-        AboutSection:Label({ Name = "Based on thugsense + utopia", Alignment = "Center" })
+        AboutSection:Label({ Name = "opioids v1", Alignment = "Center" })
+        AboutSection:Label({ Name = "Based on kamikahax", Alignment = "Center" })
         AboutSection:Divider()
-        AboutSection:Label({ Name = "Press Z to toggle the menu.", Alignment = "Center" })
-        AboutSection:Label({ Name = "Made with Library framework.", Alignment = "Center" })
+        AboutSection:Label({ Name = "CREDITS:", Alignment = "Center" })
+        AboutSection:Label({ Name = "unvhook (backend, frontend)", Alignment = "Center" })
+        AboutSection:Label({ Name = "Onyx (backend)", Alignment = "Center" })
 
         AboutSection:Button({
             Name = "Unload Library",
