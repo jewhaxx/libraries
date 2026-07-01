@@ -137,6 +137,7 @@
     function Library:Watermark(Name: string)
     function Library:Notification(Text: string, Duration: number, Color: Color3, Icon: table)
     function Library:KeybindList()
+    function Library:Settings(Window: table)
 ]]
 
 local LoadingTick = os.clock()
@@ -996,7 +997,9 @@ local Library do
         function Watermark:SetVisibility(Bool)
             Items["Watermark"].Instance.Visible = Bool
         end
-        
+
+        Library.WatermarkInstance = Watermark
+
         return Watermark
     end
 
@@ -1278,6 +1281,253 @@ local Library do
         end
 
         return KeybindList
+    end
+
+    Library.Settings = function(self, Window)
+        if not Window then
+            return
+        end
+
+        local Settings = {
+            Window = Window,
+            Elements = { }
+        }
+
+        local SettingsPage = Window:Page({
+            Name = "Settings",
+            Columns = 2
+        })
+
+        Settings.Page = SettingsPage
+
+        local ConfigSection = SettingsPage:Section({
+            Name = "Configs",
+            Side = 1
+        })
+
+        local ConfigList = ConfigSection:Dropdown({
+            Name = "Config",
+            Items = { },
+            Multi = false,
+            Flag = "Settings_ConfigList",
+            Callback = function() end
+        })
+
+        local CurrentConfigName = nil
+
+        local RefreshConfigs = function()
+            local List = { }
+            local Success, Files = pcall(function()
+                return listfiles(Library.Folders.Configs)
+            end)
+
+            if Success and Files then
+                for Index, File in Files do
+                    local Name = StringGSub(File, Library.Folders.Configs .. "\\", "")
+                    Name = StringGSub(Name, Library.Folders.Configs .. "/", "")
+                    Name = StringGSub(Name, ".json", "")
+
+                    TableInsert(List, Name)
+                end
+            end
+
+            ConfigList:Refresh(List)
+            CurrentConfigName = nil
+        end
+
+        ConfigSection:Textbox({
+            Name = "Config Name",
+            Default = "",
+            Placeholder = "Enter config name...",
+            Flag = "Settings_ConfigName",
+            Callback = function(Value)
+                CurrentConfigName = Value
+            end
+        })
+
+        ConfigSection:Button({
+            Name = "Save Config",
+            Callback = function()
+                local Name = CurrentConfigName or Library.Flags["Settings_ConfigName"]
+                if not Name or Name == "" then
+                    Library:Notification("Enter a config name first", 4, FromRGB(255, 70, 70))
+                    return
+                end
+
+                Library:SaveConfig(Name .. ".json")
+                RefreshConfigs()
+            end
+        })
+
+        ConfigSection:Button({
+            Name = "Load Config",
+            Callback = function()
+                local Name = CurrentConfigName or Library.Flags["Settings_ConfigName"]
+                if not Name or Name == "" then
+                    Library:Notification("Enter a config name first", 4, FromRGB(255, 70, 70))
+                    return
+                end
+
+                if not isfile(Library.Folders.Configs .. "/" .. Name .. ".json") then
+                    Library:Notification("Config not found", 4, FromRGB(255, 70, 70))
+                    return
+                end
+
+                local Content = readfile(Library.Folders.Configs .. "/" .. Name .. ".json")
+                Library:LoadConfig(Content)
+            end
+        })
+
+        ConfigSection:Button({
+            Name = "Delete Config",
+            Callback = function()
+                local Name = CurrentConfigName or Library.Flags["Settings_ConfigName"]
+                if not Name or Name == "" then
+                    Library:Notification("Enter a config name first", 4, FromRGB(255, 70, 70))
+                    return
+                end
+
+                Library:DeleteConfig(Name .. ".json")
+                RefreshConfigs()
+            end
+        })
+
+        ConfigSection:Button({
+            Name = "Refresh List",
+            Callback = function()
+                RefreshConfigs()
+                Library:Notification("Configs refreshed", 3, Library.Theme.Accent)
+            end
+        })
+
+        RefreshConfigs()
+
+        local KeybindSection = SettingsPage:Section({
+            Name = "Keybinds",
+            Side = 2
+        })
+
+        KeybindSection:Label({ Name = "Menu Keybind", Alignment = "Left" }):Keybind({
+            Name = "Menu Keybind",
+            Mode = "Toggle",
+            Default = Enum.KeyCode.Z,
+            Flag = "Settings_MenuKeybind",
+            Callback = function(Key)
+                Library.MenuKeybind = tostring(Key)
+            end
+        })
+
+        local WatermarkToggle = KeybindSection:Toggle({
+            Name = "Show Watermark",
+            Default = true,
+            Flag = "Settings_Watermark",
+            Callback = function(Value)
+                if Library.WatermarkInstance then
+                    Library.WatermarkInstance:SetVisibility(Value)
+                end
+            end
+        })
+
+        local KeybindListToggle = KeybindSection:Toggle({
+            Name = "Show Keybind List",
+            Default = true,
+            Flag = "Settings_KeybindList",
+            Callback = function(Value)
+                if Library.KeyList then
+                    Library.KeyList:SetVisibility(Value)
+                end
+            end
+        })
+
+        local ThemeSection = SettingsPage:Section({
+            Name = "Theme",
+            Side = 1
+        })
+
+        local AccentColor = ThemeSection:Label({ Name = "Accent Color", Alignment = "Left" }):Colorpicker({
+            Name = "Accent Color",
+            Default = Library.Theme.Accent,
+            Flag = "Settings_AccentColor",
+            Callback = function(Color)
+                Library:ChangeTheme("Accent", Color)
+            end
+        })
+
+        local BackgroundColor = ThemeSection:Label({ Name = "Background Color", Alignment = "Left" }):Colorpicker({
+            Name = "Background Color",
+            Default = Library.Theme.Background,
+            Flag = "Settings_BackgroundColor",
+            Callback = function(Color)
+                Library:ChangeTheme("Background", Color)
+            end
+        })
+
+        local TextColor = ThemeSection:Label({ Name = "Text Color", Alignment = "Left" }):Colorpicker({
+            Name = "Text Color",
+            Default = Library.Theme.Text,
+            Flag = "Settings_TextColor",
+            Callback = function(Color)
+                Library:ChangeTheme("Text", Color)
+            end
+        })
+
+        ThemeSection:Divider()
+
+        ThemeSection:Button({
+            Name = "Reset Theme",
+            Callback = function()
+                Library:ChangeTheme("Accent", FromRGB(235, 157, 255))
+                Library:ChangeTheme("Background", FromRGB(15, 15, 20))
+                Library:ChangeTheme("Text", FromRGB(215, 215, 215))
+
+                AccentColor:Set(FromRGB(235, 157, 255))
+                BackgroundColor:Set(FromRGB(15, 15, 20))
+                TextColor:Set(FromRGB(215, 215, 215))
+
+                Library:Notification("Theme reset to default", 3, Library.Theme.Accent)
+            end
+        })
+
+        local AboutSection = SettingsPage:Section({
+            Name = "About",
+            Side = 2
+        })
+
+        AboutSection:Label({ Name = "kimikahax v1.0.0", Alignment = "Center" })
+        AboutSection:Label({ Name = "Based on thugsense + utopia", Alignment = "Center" })
+        AboutSection:Divider()
+        AboutSection:Label({ Name = "Press Z to toggle the menu.", Alignment = "Center" })
+        AboutSection:Label({ Name = "Made with Library framework.", Alignment = "Center" })
+
+        AboutSection:Button({
+            Name = "Unload Library",
+            Callback = function()
+                Library:Unload()
+            end
+        })
+
+        AboutSection:Button({
+            Name = "Copy Discord",
+            Callback = function()
+                setclipboard("https://discord.gg/your-invite")
+                Library:Notification("Discord copied to clipboard", 3, Library.Theme.Accent)
+            end
+        })
+
+        Settings.Elements = {
+            ConfigSection = ConfigSection,
+            ConfigList = ConfigList,
+            KeybindSection = KeybindSection,
+            ThemeSection = ThemeSection,
+            AboutSection = AboutSection,
+            WatermarkToggle = WatermarkToggle,
+            KeybindListToggle = KeybindListToggle,
+            AccentColor = AccentColor,
+            BackgroundColor = BackgroundColor,
+            TextColor = TextColor
+        }
+
+        return Settings
     end
 
     Library.CreateColorpicker = function(self, Data)
