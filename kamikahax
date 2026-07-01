@@ -1824,12 +1824,11 @@ local Library do
             Side = 2
         })
 
-        AboutSection:Label({ Name = "opioids $$ v1", Alignment = "Center" })
-        AboutSection:Label({ Name = "Based on kimikahax", Alignment = "Center" })
+        AboutSection:Label({ Name = "kimikahax v1.0.0", Alignment = "Center" })
+        AboutSection:Label({ Name = "Based on thugsense + utopia", Alignment = "Center" })
         AboutSection:Divider()
-        AboutSection:Label({ Name = "CREDITS:", Alignment = "Center" })
-        AboutSection:Label({ Name = "unvhook (backend, frontend)", Alignment = "Center" })
-        AboutSection:Label({ Name = "Onyx (backend)", Alignment = "Center" })
+        AboutSection:Label({ Name = "Press Z to toggle the menu.", Alignment = "Center" })
+        AboutSection:Label({ Name = "Made with Library framework.", Alignment = "Center" })
 
         AboutSection:Button({
             Name = "Unload Library",
