@@ -207,7 +207,7 @@ local Library do
             ["Text Border"] = FromRGB(0, 0, 0)
         },
 
-        MenuKeybind = Enum.KeyCode.Z, 
+        MenuKeybind = tostring(Enum.KeyCode.Z),
 
         Tween = {
             Time = 0.3,
@@ -1568,16 +1568,6 @@ local Library do
 
 
             Colorpicker.CalculateCount = function(self, Index, YScale, YOffset)
-                local MaxButtonsAdded = 5
-
-                local Column = Index % MaxButtonsAdded
-            
-                local ButtonSize = Items["ColorpickerButton"].Instance.AbsoluteSize
-                local Spacing = 4
-            
-                local XPosition = (ButtonSize.X + Spacing) * Column - Spacing - 21
-            
-                Items["ColorpickerButton"].Instance.Position = UDim2New(1, -XPosition, YScale or 0.5, YOffset or 0)
             end
 
             Colorpicker:CalculateCount(Data.Count)
@@ -2082,6 +2072,8 @@ local Library do
             Colorpicker:Set(Color, Alpha)
         end
 
+        Colorpicker.Items = Items
+
         return Colorpicker
     end
 
@@ -2500,6 +2492,8 @@ local Library do
         Library.SetFlags[Data.Flag] = function(Value)
             Keybind:Set(Value)
         end
+
+        Keybind.Items = Items
 
         return Keybind
     end
@@ -3776,12 +3770,33 @@ local Library do
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
-            
+
             Instances:Create("UIStroke", {
                 Parent = Items["Text"].Instance,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"})
+
+            Items["RightContainer"] = Instances:Create("Frame", {
+                Parent = Items["Toggle"].Instance,
+                BackgroundTransparency = 1,
+                BorderColor3 = FromRGB(0, 0, 0),
+                AnchorPoint = Vector2New(1, 0.5),
+                Position = UDim2New(1, -2, 0.5, 0),
+                Size = UDim2New(0, 0, 0, 14),
+                AutomaticSize = Enum.AutomaticSize.X,
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["RightContainer"].Instance,
+                FillDirection = Enum.FillDirection.Horizontal,
+                HorizontalAlignment = Enum.HorizontalAlignment.Right,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 4),
+                VerticalAlignment = Enum.VerticalAlignment.Center
+            })
 
             Items["Toggle"]:OnHover(function()
                 if Toggle.Value then 
@@ -3857,6 +3872,13 @@ local Library do
             local Extension = Library:CreateColorpicker(Colorpicker)
             Library.Flags[Colorpicker.Flag] = Extension
 
+            if Extension.Items and Extension.Items["ColorpickerButton"] then
+                Extension.Items["ColorpickerButton"].Instance.Parent = Items["RightContainer"].Instance
+                Extension.Items["ColorpickerButton"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                Extension.Items["ColorpickerButton"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                Extension.Items["ColorpickerButton"].Instance.LayoutOrder = Toggle.Count
+            end
+
             return Colorpicker
         end
 
@@ -3878,6 +3900,13 @@ local Library do
 
             local Extension = Library:CreateKeybind(Keybind)
             Library.Flags[Keybind.Flag] = Extension
+
+            if Extension.Items and Extension.Items["KeyButton"] then
+                Extension.Items["KeyButton"].Instance.Parent = Items["RightContainer"].Instance
+                Extension.Items["KeyButton"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                Extension.Items["KeyButton"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                Extension.Items["KeyButton"].Instance.LayoutOrder = 999
+            end
 
             return Keybind, Extension
         end
@@ -4673,6 +4702,27 @@ local Library do
                 Parent = Items["Text"].Instance,
                 LineJoinMode = Enum.LineJoinMode.Miter,
             }):AddToTheme({Color = "Text Border"})
+
+            Items["RightContainer"] = Instances:Create("Frame", {
+                Parent = Items["Label"].Instance,
+                BackgroundTransparency = 1,
+                BorderColor3 = FromRGB(0, 0, 0),
+                AnchorPoint = Vector2New(1, 0.5),
+                Position = UDim2New(1, -2, 0.5, 0),
+                Size = UDim2New(0, 0, 0, 14),
+                AutomaticSize = Enum.AutomaticSize.X,
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["RightContainer"].Instance,
+                FillDirection = Enum.FillDirection.Horizontal,
+                HorizontalAlignment = Enum.HorizontalAlignment.Right,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 4),
+                VerticalAlignment = Enum.VerticalAlignment.Center
+            })
         end
 
         function Label:Colorpicker(Data)
@@ -4697,7 +4747,14 @@ local Library do
             Colorpicker.Count = Label.Count
 
             local Extension = Library:CreateColorpicker(Colorpicker)
-            
+
+            if Extension.Items and Extension.Items["ColorpickerButton"] then
+                Extension.Items["ColorpickerButton"].Instance.Parent = Items["RightContainer"].Instance
+                Extension.Items["ColorpickerButton"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                Extension.Items["ColorpickerButton"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                Extension.Items["ColorpickerButton"].Instance.LayoutOrder = Label.Count
+            end
+
             return Colorpicker, Extension
         end
 
@@ -4718,6 +4775,13 @@ local Library do
             }
 
             local Extension = Library:CreateKeybind(Keybind)
+
+            if Extension.Items and Extension.Items["KeyButton"] then
+                Extension.Items["KeyButton"].Instance.Parent = Items["RightContainer"].Instance
+                Extension.Items["KeyButton"].Instance.AnchorPoint = Vector2New(0, 0.5)
+                Extension.Items["KeyButton"].Instance.Position = UDim2New(0, 0, 0.5, 0)
+                Extension.Items["KeyButton"].Instance.LayoutOrder = 999
+            end
 
             return Keybind, Extension
         end
