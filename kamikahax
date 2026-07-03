@@ -2960,20 +2960,20 @@ local Library do
         end
 
         local Items = { } do
-            -- Border ring (inner) is Inline-colored; outer UIStroke is Accent.
-            -- Roblox Frames only support one UIStroke, so we get the two-tone effect
-            -- by using BorderColor3 (inner) + UIStroke (outer).
+            -- Window = outer frame with Accent UIStroke.
+            -- Inline = inner sub-frame with Border UIStroke (the "inline" — same pattern
+            -- as the main window's Items["Inline"]). Creates the nested/inset look.
             Items["Window"] = Instances:Create("Frame", {
                 Parent = Library.Holder.Instance,
                 Size = UDim2New(0, 290, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 Name = "\0",
                 Position = UDim2New(0, 200, 0, 100),
-                BorderColor3 = FromRGB(26, 26, 32),
-                BorderSizePixel = 1,
-                BackgroundColor3 = FromRGB(20, 20, 25)
+                BorderColor3 = FromRGB(10, 10, 10),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(26, 26, 32)
             })
-            Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Inline" })
+            Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline" })
             Library.MusicPlayerFrame = Items["Window"].Instance
 
             Items["Window"]:MakeDraggable()
@@ -2986,16 +2986,39 @@ local Library do
                 Color = FromRGB(235, 157, 255)
             }):AddToTheme({ Color = "Accent" })
 
-            Instances:Create("UIPadding", {
+            -- Inline sub-frame: sits inside Window with a 4px margin on all sides.
+            -- The 4px gap shows the Window's Inline-colored background, creating a
+            -- thin ring between the Accent stroke (outer) and the Inline border (inner).
+            Items["Inline"] = Instances:Create("Frame", {
                 Parent = Items["Window"].Instance,
-                PaddingTop = UDimNew(0, 8),
-                PaddingBottom = UDimNew(0, 8),
-                PaddingLeft = UDimNew(0, 8),
-                PaddingRight = UDimNew(0, 8)
+                Name = "\0",
+                Position = UDim2New(0, 4, 0, 4),
+                Size = UDim2New(1, -8, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BorderColor3 = FromRGB(27, 27, 32),
+                BorderSizePixel = 2,
+                BackgroundColor3 = FromRGB(20, 20, 25)
+            })
+            Items["Inline"]:AddToTheme({ BackgroundColor3 = "Background", BorderColor3 = "Outline" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Inline"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                Color = FromRGB(12, 12, 16),
+                Name = "\0"
+            }):AddToTheme({ Color = "Border" })
+
+            Instances:Create("UIPadding", {
+                Parent = Items["Inline"].Instance,
+                PaddingTop = UDimNew(0, 6),
+                PaddingBottom = UDimNew(0, 6),
+                PaddingLeft = UDimNew(0, 6),
+                PaddingRight = UDimNew(0, 6)
             })
 
             Instances:Create("UIListLayout", {
-                Parent = Items["Window"].Instance,
+                Parent = Items["Inline"].Instance,
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDimNew(0, 6)
             })
@@ -3409,6 +3432,15 @@ local Library do
                 TextWrapped = true,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
+
+            -- Reparent all content children from Window to Inline.
+            -- Window now contains only: Inline frame + Accent UIStroke.
+            -- Inline contains: UIPadding, UIListLayout, AccentLine, Title, InfoRow, etc.
+            for _, child in Items["Window"].Instance:GetChildren() do
+                if child ~= Items["Inline"].Instance then
+                    child.Parent = Items["Inline"].Instance
+                end
+            end
         end
 
         local State = {
@@ -11966,4 +11998,315 @@ local Library do
 end
 
 getgenv().Library = Library
-return Library
+local Window = Library:Window({
+    Name = "Library Demo",
+    Size = UDim2.new(0, 720, 0, 480)
+})
+
+Library:Watermark("Library Demo")
+Library:KeybindList()
+
+local Tab1 = Window:Page({ Name = "Tab 1", Columns = 2 })
+local Tab2 = Window:Page({ Name = "Tab 2", Columns = 2 })
+local Tab3 = Window:Page({ Name = "Tab 3", Columns = 2 })
+
+Library:Settings(Window)
+Library:Playerlist(Window)
+Library:MusicPlayer()
+Library:ESPPreview()
+
+do
+    local Collapsible1 = Tab1:Section({
+        Name = "Collapsible Section (open)",
+        Side = 1,
+        Collapsible = true,
+        Collapsed = false
+    })
+
+    Collapsible1:BodyPartBox({
+        Name = "Hitbox Parts",
+        RigType = "R6",           -- "R6" or "R15"
+        Multiple = false,         -- single or multi select
+        Default = {"Head", "Torso"},
+        Flag = "MyBodyParts",
+        Tooltips = {
+            ["Head"] = "Target the head hitbox",
+            ["Torso"] = "Target the chest/torso hitbox",
+            ["Left Arm"] = "Target the left arm",
+            ["Right Arm"] = "Target the right arm",
+            ["Left Leg"] = "Target the left leg",
+            ["Right Leg"] = "Target the right leg",
+            ["HumanoidRootPart"] = "Target the primary humanoid root part"
+        },
+        Callback = function(Selected) end
+    })
+
+    Collapsible1:Toggle({
+        Name = "Example Tooltip Toggle",
+        Default = false,
+        Flag = "Demo_TooltipToggle",
+        Tooltip = "This is a toggle with an animated tooltip!"
+    })
+
+    Collapsible1:Button({
+        Name = "Example Tooltip Button",
+        Tooltip = "Clicking this button triggers a tooltip popup!",
+        Callback = function()
+            Library:Notification("Tooltip button clicked!", 3, Library.Theme.Accent)
+        end
+    })
+
+    local Toggle1 = Collapsible1:Toggle({ Name = "Toggle 1", Default = true, Flag = "Demo_T1" })
+    Toggle1:Colorpicker({ Name = "Color", Default = Color3.fromRGB(167, 139, 250), Flag = "Demo_T1_Color" })
+    Toggle1:Keybind({ Name = "Key", Mode = "Toggle", Default = Enum.KeyCode.One, Flag = "Demo_T1_Key" })
+
+    local Toggle2 = Collapsible1:Toggle({ Name = "Toggle 2", Default = false, Flag = "Demo_T2" })
+    Toggle2:Colorpicker({ Name = "Color 1", Default = Color3.fromRGB(255, 100, 100), Flag = "Demo_T2_Color1" })
+    Toggle2:Colorpicker({ Name = "Color 2", Default = Color3.fromRGB(100, 255, 100), Flag = "Demo_T2_Color2" })
+
+    Collapsible1:Slider({
+        Name = "Slider",
+        Min = 0,
+        Max = 100,
+        Default = 50,
+        Suffix = "%",
+        Flag = "Demo_S1"
+    })
+
+    local CollapsedSection = Tab1:Section({
+        Name = "Collapsed Section",
+        Side = 1,
+        Collapsible = true,
+        Collapsed = true
+    })
+
+    CollapsedSection:Toggle({ Name = "Hidden Toggle 1", Default = true, Flag = "Demo_HT1" })
+    CollapsedSection:Toggle({ Name = "Hidden Toggle 2", Default = false, Flag = "Demo_HT2" })
+    CollapsedSection:Button({
+        Name = "Hidden Button",
+        Callback = function()
+            Library:Notification("Hidden button pressed", 3, Library.Theme.Accent)
+        end
+    })
+
+    local RiskySection = Tab1:Section({ Name = "Risky Features", Side = 2 })
+
+    RiskySection:Toggle({
+        Name = "Risky Toggle",
+        Default = false,
+        Flag = "Demo_Risky1",
+        Risky = true,
+        RiskyText = "Enabling this feature may have unintended consequences. It is highly recommended that you do NOT enable this unless you know what you are doing.\n\nAre you sure you want to continue?",
+        Callback = function(Value)
+            if Value then
+                Library:Notification("Risky toggle enabled!", 4, Color3.fromRGB(220, 90, 90))
+            end
+        end
+    })
+
+    RiskySection:Toggle({
+        Name = "Another Risky Toggle",
+        Default = false,
+        Flag = "Demo_Risky2",
+        Risky = true,
+        RiskyText = "This will permanently delete your settings. Continue?",
+        Callback = function(Value)
+            if Value then
+                Library:Notification("Settings deleted!", 4, Color3.fromRGB(220, 90, 90))
+            end
+        end
+    })
+
+    RiskySection:Button({
+        Name = "Risky Action Button",
+        Risky = true,
+        RiskyText = "This action cannot be undone. Press Confirm to proceed, or Cancel to abort.",
+        Callback = function()
+            Library:Notification("Risky action confirmed and executed", 4, Color3.fromRGB(220, 90, 90))
+        end
+    })
+
+    RiskySection:Button({
+        Name = "Normal Button",
+        Callback = function()
+            Library:Notification("Normal action", 3, Library.Theme.Accent)
+        end
+    })
+end
+
+do
+    local Section1 = Tab2:Section({ Name = "Section 1", Side = 1, Collapsible = true })
+
+    Section1:Toggle({ Name = "Toggle 1", Default = true, Flag = "Demo2_T1" })
+    Section1:Toggle({ Name = "Toggle 2", Default = false, Flag = "Demo2_T2" })
+    Section1:Toggle({ Name = "Toggle 3", Default = true, Flag = "Demo2_T3" })
+
+    Section1:Slider({
+        Name = "Value",
+        Min = 0,
+        Max = 100,
+        Default = 75,
+        Suffix = "%",
+        Flag = "Demo2_S1"
+    })
+
+    local MultiSection1, MultiSection2 = Tab2:MultiSection({
+        Sections = { "Multi 1", "Multi 2" },
+        Side = 2
+    })
+
+    MultiSection1:Dropdown({
+        Name = "Pick One",
+        Items = { "A", "B", "C", "D" },
+        Default = "A",
+        Flag = "Demo2_D1"
+    })
+
+    MultiSection1:Dropdown({
+        Name = "Pick Many",
+        Items = { "1", "2", "3", "4", "5", "6" },
+        Multi = true,
+        Flag = "Demo2_D2"
+    })
+
+    MultiSection2:Toggle({ Name = "Enabled", Default = true, Flag = "Demo2_T4" })
+
+    MultiSection2:Button({
+        Name = "Action",
+        Callback = function()
+            Library:Notification("Action triggered", 3, Library.Theme.Accent)
+        end
+    })
+end
+
+do
+    local LeftSection = Tab3:Section({ Name = "Left", Side = 1, Collapsible = true })
+
+    LeftSection:Label({ Name = "Stress Test", Alignment = "Left" })
+    LeftSection:Divider()
+
+    local StressToggle = LeftSection:Toggle({
+        Name = "Stacked Toggle",
+        Default = true,
+        Flag = "Demo3_Stress"
+    })
+
+    StressToggle:Colorpicker({ Name = "C1", Default = Color3.fromRGB(255, 0, 0), Flag = "Demo3_C1" })
+    StressToggle:Colorpicker({ Name = "C2", Default = Color3.fromRGB(0, 255, 0), Flag = "Demo3_C2" })
+    StressToggle:Colorpicker({ Name = "C3", Default = Color3.fromRGB(0, 0, 255), Flag = "Demo3_C3" })
+    StressToggle:Keybind({ Name = "K1", Mode = "Toggle", Default = Enum.KeyCode.F, Flag = "Demo3_K1" })
+
+    LeftSection:Divider()
+
+    LeftSection:BezierMapper({
+        Name = "Bezier Curve",
+        Default = { { 0, 0 }, { 0.25, 0.75 }, { 0.75, 0.25 }, { 1, 1 } },
+        Flag = "Demo3_Bezier",
+        Callback = function(Points)
+            for i, Pt in Points do
+                print("Point" .. i .. ":", Pt[1], Pt[2])
+            end
+        end
+    })
+
+    LeftSection:Divider()
+
+    LeftSection:Dropdown({
+        Name = "Multi Select",
+        Items = { "Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta" },
+        Multi = true,
+        Default = { "Alpha", "Gamma" },
+        Flag = "Demo3_Multi",
+        Callback = function(Value)
+            print("Multi:", table.concat(Value, ", "))
+        end
+    })
+
+    local RightSection = Tab3:Section({ Name = "Right", Side = 2, Collapsible = true, Collapsed = true })
+
+    RightSection:Label({ Name = "Info", Alignment = "Center" })
+    RightSection:Label({ Name = "This section starts collapsed.", Alignment = "Center" })
+    RightSection:Label({ Name = "Press Z to toggle the menu.", Alignment = "Center" })
+    RightSection:Divider()
+
+    RightSection:Button({
+        Name = "Test Notification",
+        Callback = function()
+            Library:Notification("Test notification!", 4, Library.Theme.Accent)
+        end
+    })
+
+    RightSection:Button({
+        Name = "Test Error",
+        Callback = function()
+            Library:Notification("Error: something went wrong", 4, Color3.fromRGB(255, 70, 70))
+        end
+    })
+end
+
+do
+    local ESPSection = Tab3:Section({ Name = "ESP Settings", Side = 2, Collapsible = true })
+
+    local ESP = Library.ESPPreviewInstance
+
+    ESPSection:Toggle({
+        Name = "Show Box",
+        Default = true,
+        Flag = "ESP_ShowBox",
+        Callback = function(Value)
+            if ESP then ESP:SetConfig("ShowBox", Value) end
+        end
+    })
+
+    ESPSection:Toggle({
+        Name = "Show Name",
+        Default = true,
+        Flag = "ESP_ShowName",
+        Callback = function(Value)
+            if ESP then ESP:SetConfig("ShowName", Value) end
+        end
+    })
+
+    ESPSection:Toggle({
+        Name = "Show Health",
+        Default = true,
+        Flag = "ESP_ShowHealth",
+        Callback = function(Value)
+            if ESP then ESP:SetConfig("ShowHealth", Value) end
+        end
+    })
+
+    ESPSection:Toggle({
+        Name = "Use Status Colors",
+        Default = true,
+        Flag = "ESP_StatusColors",
+        Callback = function(Value)
+            if ESP then ESP:SetConfig("UseStatusColors", Value) end
+        end
+    })
+
+    ESPSection:Dropdown({
+        Name = "Preview Status",
+        Items = { "Local", "Neutral", "Friendly", "Enemy" },
+        Default = "Neutral",
+        Flag = "ESP_PreviewStatus",
+        Callback = function(Value)
+            if ESP then ESP:SetPreviewStatus(Value) end
+        end
+    })
+
+    ESPSection:Divider()
+
+    ESPSection:Toggle({
+        Name = "Enable ESP (In-Game)",
+        Default = false,
+        Flag = "ESP_Enabled",
+        Callback = function(Value)
+            if ESP then ESP:SetEnabled(Value) end
+        end
+    })
+end
+
+task.delay(1, function()
+    Library:Notification("Library loaded successfully", 4, Library.Theme.Accent)
+end)
