@@ -5052,7 +5052,7 @@ local Library do
                 Parent = Items["Header"].Instance,
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(215, 215, 215),
-                Text = "Instance Tree",
+                Text = "Instance Viewer",
                 BackgroundTransparency = 1,
                 Size = UDim2New(1, -80, 1, 0),
                 TextXAlignment = Enum.TextXAlignment.Left,
