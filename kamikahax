@@ -1111,43 +1111,36 @@ local Library do
     end
 
     Library.DeleteConfig = function(self, Config)
-        if isfile(Library.Folders.Configs .. "/" .. Config) then 
+        if isfile(Library.Folders.Configs .. "/" .. Config) then
             delfile(Library.Folders.Configs .. "/" .. Config)
-            Library:Notification("Deleted config " .. Config .. ".json", 5, Color3.fromRGB(0, 255, 0))
+            Library:Notification("Deleted config " .. Config, 5, Color3.fromRGB(0, 255, 0))
         end
     end
 
     Library.SaveConfig = function(self, Config)
-        if isfile(Library.Folders.Directory .. "/" .. Library.Folders.Configs .. "/" .. Config .. ".json") then
-            writefile(Library.Folders.Directory .. "/" .. Library.Folders.Configs .. "/" .. Config .. ".json", Library:GetConfig())
-            Library:Notification("Saved config " .. Config .. ".json", 5, Color3.fromRGB(0, 255, 0))
-        end
+        -- Note: callers (Settings module) pass `Name .. ".json"` already, so we
+        -- use `Config` directly without re-appending ".json".
+        -- Library.Folders.Configs already includes the directory prefix ("kimikahax/Configs"),
+        -- so do NOT prepend Library.Folders.Directory again — that produced "kimikahax/kimikahax/Configs".
+        -- Also dropped the isfile guard so users can create NEW configs, not just overwrite existing ones.
+        writefile(Library.Folders.Configs .. "/" .. Config, Library:GetConfig())
+        Library:Notification("Saved config " .. Config, 5, Color3.fromRGB(0, 255, 0))
     end
 
     Library.RefreshConfigsList = function(self, Element)
-        local CurrentList = { }
+        -- Simplified: the previous diff logic was dead code (#List ~= CurrentList
+        -- always compared a number against a table reference, so IsNew was always true).
+        -- Just rebuild the list every call.
         local List = { }
 
-        local ConfigFolderName = StringGSub(Library.Folders.Configs, Library.Folders.Directory .. "/", "")
-
         for Index, Value in listfiles(Library.Folders.Configs) do
-            local FileName = StringGSub(Value, Library.Folders.Directory .. "\\" .. ConfigFolderName .. "\\", "")
+            local FileName = StringGSub(Value, Library.Folders.Configs .. "\\", "")
+            FileName = StringGSub(FileName, Library.Folders.Configs .. "/", "")
+            FileName = StringGSub(FileName, ".json", "")
             List[Index] = FileName
         end
 
-        local IsNew = #List ~= CurrentList
-
-        if not IsNew then
-            for Index = 1, #List do
-                if List[Index] ~= CurrentList[Index] then
-                    IsNew = true
-                    break
-                end
-            end
-        else
-            CurrentList = List
-            Element:Refresh(CurrentList)
-        end
+        Element:Refresh(List)
     end
 
     Library.ChangeItemTheme = function(self, Item, Properties)
@@ -1615,6 +1608,15 @@ local Library do
                 ZIndex = 51,
                 Name = "\0"
             })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Popup"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0",
+                Color = FromRGB(235, 157, 255),
+                Thickness = 1
+            }):AddToTheme({Color = "Accent"})
 
             Instances:Create("UIGradient", {
                 Parent = Items["Popup"].Instance,
@@ -2967,6 +2969,14 @@ local Library do
             Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
             Library.MusicPlayerFrame = Items["Window"].Instance
 
+            Instances:Create("UIStroke", {
+                Parent = Items["Window"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0",
+                Color = FromRGB(235, 157, 255)
+            }):AddToTheme({Color = "Accent"})
+
             Items["Window"]:MakeDraggable()
 
             Instances:Create("UIStroke", {
@@ -4098,6 +4108,14 @@ local Library do
                 Parent = Items["Window"].Instance,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0",
+                Color = FromRGB(235, 157, 255)
+            }):AddToTheme({Color = "Accent"})
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Window"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
                 Color = FromRGB(27, 27, 32)
             }):AddToTheme({ Color = "Outline" })
 
@@ -5000,6 +5018,14 @@ local Library do
             })
             Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
             Library.InstanceTreeFrame = Items["Window"].Instance
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Window"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0",
+                Color = FromRGB(235, 157, 255)
+            }):AddToTheme({Color = "Accent"})
 
             Items["Window"]:MakeDraggable()
 
@@ -6604,11 +6630,11 @@ local Library do
             Side = 1
         })
 
-        AboutSection:Label({ Name = "opioid$$ v1.0.0", Alignment = "Center" })
-        AboutSection:Label({ Name = "Cheat with style.", Alignment = "Center" })
+        AboutSection:Label({ Name = "kimikahax v1.0.0", Alignment = "Center" })
+        AboutSection:Label({ Name = "Based on thugsense + utopia", Alignment = "Center" })
         AboutSection:Divider()
-        AboutSection:Label({ Name = "- unvhook (backend)", Alignment = "Center" })
-        AboutSection:Label({ Name = "- Onyx (backend, frontend)", Alignment = "Center" })
+        AboutSection:Label({ Name = "Press Z to toggle the menu.", Alignment = "Center" })
+        AboutSection:Label({ Name = "Made with Library framework.", Alignment = "Center" })
 
         AboutSection:Button({
             Name = "Unload Library",
@@ -11604,4 +11630,4 @@ local Library do
 end
 
 getgenv().Library = Library
-return Library  
+return Library
