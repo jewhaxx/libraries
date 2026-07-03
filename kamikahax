@@ -2960,20 +2960,19 @@ local Library do
         end
 
         local Items = { } do
-            -- Window = outer frame with Accent UIStroke.
-            -- Inline = inner sub-frame with Border UIStroke (the "inline" — same pattern
-            -- as the main window's Items["Inline"]). Creates the nested/inset look.
+            -- Simple structure: one Window frame with Inline-colored background (grey)
+            -- and an Accent UIStroke (purple outline). No nested sub-frame.
             Items["Window"] = Instances:Create("Frame", {
                 Parent = Library.Holder.Instance,
-                Size = UDim2New(0, 320, 0, 0),
+                Size = UDim2New(0, 290, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 Name = "\0",
                 Position = UDim2New(0, 200, 0, 100),
                 BorderColor3 = FromRGB(10, 10, 10),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(26, 26, 32)
+                BorderSizePixel = 2,
+                BackgroundColor3 = FromRGB(20, 20, 25)
             })
-            Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline" })
+            Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
             Library.MusicPlayerFrame = Items["Window"].Instance
 
             Items["Window"]:MakeDraggable()
@@ -2986,40 +2985,16 @@ local Library do
                 Color = FromRGB(235, 157, 255)
             }):AddToTheme({ Color = "Accent" })
 
-            -- Inline sub-frame: sits inside Window with a 7px margin on all sides
-            -- (same gap as the main window's Inline). The 7px gap shows the Window's
-            -- Inline-colored background, creating a clear ring between the Accent
-            -- stroke (outer) and the Inline border (inner).
-            Items["Inline"] = Instances:Create("Frame", {
-                Parent = Items["Window"].Instance,
-                Name = "\0",
-                Position = UDim2New(0, 7, 0, 7),
-                Size = UDim2New(1, -14, 0, 0),
-                AutomaticSize = Enum.AutomaticSize.Y,
-                BorderColor3 = FromRGB(27, 27, 32),
-                BorderSizePixel = 2,
-                BackgroundColor3 = FromRGB(20, 20, 25)
-            })
-            Items["Inline"]:AddToTheme({ BackgroundColor3 = "Background", BorderColor3 = "Outline" })
-
-            Instances:Create("UIStroke", {
-                Parent = Items["Inline"].Instance,
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                Color = FromRGB(12, 12, 16),
-                Name = "\0"
-            }):AddToTheme({ Color = "Border" })
-
             Instances:Create("UIPadding", {
-                Parent = Items["Inline"].Instance,
-                PaddingTop = UDimNew(0, 6),
-                PaddingBottom = UDimNew(0, 6),
-                PaddingLeft = UDimNew(0, 6),
-                PaddingRight = UDimNew(0, 6)
+                Parent = Items["Window"].Instance,
+                PaddingTop = UDimNew(0, 8),
+                PaddingBottom = UDimNew(0, 8),
+                PaddingLeft = UDimNew(0, 8),
+                PaddingRight = UDimNew(0, 8)
             })
 
             Instances:Create("UIListLayout", {
-                Parent = Items["Inline"].Instance,
+                Parent = Items["Window"].Instance,
                 SortOrder = Enum.SortOrder.LayoutOrder,
                 Padding = UDimNew(0, 6)
             })
@@ -3433,15 +3408,6 @@ local Library do
                 TextWrapped = true,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
-
-            -- Reparent all content children from Window to Inline.
-            -- Window now contains only: Inline frame + Accent UIStroke.
-            -- Inline contains: UIPadding, UIListLayout, AccentLine, Title, InfoRow, etc.
-            for _, child in Items["Window"].Instance:GetChildren() do
-                if child ~= Items["Inline"].Instance then
-                    child.Parent = Items["Inline"].Instance
-                end
-            end
         end
 
         local State = {
