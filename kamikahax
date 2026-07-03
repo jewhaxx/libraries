@@ -2986,14 +2986,15 @@ local Library do
                 Color = FromRGB(235, 157, 255)
             }):AddToTheme({ Color = "Accent" })
 
-            -- Inline sub-frame: sits inside Window with a 4px margin on all sides.
-            -- The 4px gap shows the Window's Inline-colored background, creating a
-            -- thin ring between the Accent stroke (outer) and the Inline border (inner).
+            -- Inline sub-frame: sits inside Window with a 7px margin on all sides
+            -- (same gap as the main window's Inline). The 7px gap shows the Window's
+            -- Inline-colored background, creating a clear ring between the Accent
+            -- stroke (outer) and the Inline border (inner).
             Items["Inline"] = Instances:Create("Frame", {
                 Parent = Items["Window"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, 4, 0, 4),
-                Size = UDim2New(1, -8, 0, 0),
+                Position = UDim2New(0, 7, 0, 7),
+                Size = UDim2New(1, -14, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BorderColor3 = FromRGB(27, 27, 32),
                 BorderSizePixel = 2,
