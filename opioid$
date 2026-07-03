@@ -1,177 +1,285 @@
--- kimikahax
+-- opioid$$
 --[[
-    Remake based on thugsense (by samet) + vaderhaxx patterns
+######## DOCUMENTATION ########
 
-    Assign different flags to each element to prevent from configs overriding eachother
-    Example script is at the bottom
+-- Setup
 
-    Documentation:
-    function Library:Window(Data: table
-        Name/name: string,
-        Size/size: UDim2
-    )
+function Library:Window(Data: table
+    Name/name: string,
+    Size/size: UDim2,
+    FadeSpeed/fadespeed: number
+)
 
-    function Window:Page(Data: table
-        Name/name: string,
-        Columns/columns: number,
-        SubTabs/subtabs: boolean
-    )
+function Library:Watermark(Name: string)
+function Library:Notification(Text: string, Duration: number, Color: Color3, Icon: table?)
+function Library:KeybindList()
+function Library:AddTooltip(Element: Instance, Text: string)
 
-    function Page:SubPage(Data: table
-        Icon/icon: string,
-        Columns/columns: number
-    )
+function Library:Settings(Window: table)
+function Library:Playerlist(Window: table)
+function Library:MusicPlayer()
+function Library:ESPPreview()
+function Library:InstanceTree()
 
-    function Page:Section(Data: table
-        Name/name: string,
-        Side/side: number,
-        Collapsible/collapsible: boolean,
-        Collapsed/collapsed: boolean
-    )
+function Library:RiskyPopup(Data: table
+    Window/window: table,
+    Parent/parent: table,
+    Text/text: string,
+    ConfirmText/confirmtext: string,
+    CancelText/canceltext: string,
+    WaitTime/waittime: number,
+    OnConfirm/onconfirm: function,
+    OnCancel/oncancel: function
+)
 
-    function Page:MultiSection(Data: table
-        Sections/sections: table,
-        Side/side: number
-    )
+function Library:Unload()
 
-    function Page:ScrollableSection(Data: table
-        Name/name: string,
-        Side/side: number,
-        Size/size: number
-    )
+-- Config
+function Library:GetConfig() -> string
+function Library:LoadConfig(Config: string)
+function Library:SaveConfig(Config: string)
+function Library:DeleteConfig(Config: string)
+function Library:RefreshConfigsList(Element: table)
 
-    function Section:Divider()
+-- Theme
+function Library:ChangeTheme(Theme: string, Color: Color3)
+function Library:AddToTheme(Item: Instance, Properties: table)
+function Library:ChangeItemTheme(Item: Instance, Properties: table)
 
-    function Section:Label(Data: table
-        Name/name: string,
-        Alignment/alignment: string
-    )
+-- Window / Page hierarchy
+function Window:Page(Data: table
+    Name/name: string,
+    Columns/columns: number,
+    Subtabs/subtabs: boolean
+)
 
-    function Section:Toggle(Data: table
-        Name/name: string,
-        Default/default: boolean,
-        Flag/flag: string,
-        Callback/callback: function,
-        Risky/risky: boolean,
-        RiskyText/riskytext: string
-    )
+function Page:SubPage(Data: table
+    Icon/icon: string,
+    Columns/columns: number
+)
 
-    function Section:Button(Data: table
-        Name/name: string,
-        Callback/callback: function,
-        Risky/risky: boolean,
-        RiskyText/riskytext: string
-    )
+function Page:Section(Data: table
+    Name/name: string,
+    Side/side: number,
+    Collapsible/collapsible: boolean,
+    Collapsed/collapsed: boolean
+)
 
-    function Section:Slider(Data: table
-        Name/name: string,
-        Min/min: number,
-        Max/max: number,
-        Decimals/decimals: number,
-        Default/default: number,
-        Suffix/suffix: string,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Page:MultiSection(Data: table
+    Sections/sections: table,
+    Side/side: number
+) -> Section, Section, ...
 
-    function Section:Textbox(Data: table
-        Name/name: string,
-        Default/default: string,
-        Placeholder/placeholder: string,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Page:ScrollableSection(Data: table
+    Name/name: string,
+    Side/side: number,
+    Size/size: number
+)
 
-    function Section:Dropdown(Data: table
-        Name/name: string,
-        Items/items: table,
-        Default/default: string,
-        Flag/flag: string,
-        Multi/multi: boolean,
-        Callback/callback: function
-    )
+-- Section elements
+function Section:Divider()
+function Section:Label(Data: table
+    Name/name: string,
+    Alignment/alignment: string
+)
 
-    function Section:Listbox(Data: table
-        Size/size: number,
-        Items/items: table,
-        Default/default: string,
-        Multi/multi: boolean,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:Toggle(Data: table
+    Name/name: string,
+    Default/default: boolean,
+    Flag/flag: string,
+    Callback/callback: function,
+    Risky/risky: boolean,
+    RiskyText/riskytext: string,
+    Tooltip/tooltip: string
+)
 
-    function Label:Keybind(Data: table
-        Name/name: string,
-        Mode/mode: string,
-        Default/default: EnumItem,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:Button(Data: table
+    Name/name: string,
+    Callback/callback: function,
+    Risky/risky: boolean,
+    RiskyText/riskytext: string,
+    Tooltip/tooltip: string
+)
 
-    function Label:Colorpicker(Data: table
-        Name/name: string,
-        Default/default: Color3,
-        Alpha/alpha: boolean,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:Slider(Data: table
+    Name/name: string,
+    Min/min: number,
+    Max/max: number,
+    Decimals/decimals: number,
+    Default/default: number,
+    Suffix/suffix: string,
+    Flag/flag: string,
+    Callback/callback: function,
+    Compact/compact: boolean
+)
 
-    function Toggle:Colorpicker(Data: table
-        Name/name: string,
-        Default/default: Color3,
-        Alpha/alpha: boolean,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:Textbox(Data: table
+    Name/name: string,
+    Default/default: string,
+    Placeholder/placeholder: string,
+    Flag/flag: string,
+    Callback/callback: function
+)
 
-    function Toggle:Keybind(Data: table
-        Name/name: string,
-        Mode/mode: string,
-        Default/default: EnumItem,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:Dropdown(Data: table
+    Name/name: string,
+    Items/items: table,
+    Default/default: string or table,
+    Flag/flag: string,
+    Multi/multi: boolean,
+    Callback/callback: function,
+    Tooltip/tooltip: string
+)
 
-    function Sections:Textbox(Data: table
-        Name/name: string,
-        Default/default: string,
-        Placeholder/placeholder: string,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:Listbox(Data: table
+    Size/size: number,
+    Items/items: table,
+    Default/default: string or table,
+    Multi/multi: boolean,
+    Flag/flag: string,
+    Callback/callback: function
+)
 
-    function Library:Watermark(Name: string)
-    function Library:Notification(Text: string, Duration: number, Color: Color3, Icon: table)
-    function Library:KeybindList()
-    function Library:Settings(Window: table)
-    function Library:Playerlist(Window: table)
-    function Library:InstanceTree()
-    function Library:RiskyPopup(Data: table
-        Window/window: table,
-        Parent/parent: table,
-        Text/text: string,
-        ConfirmText/confirmtext: string,
-        CancelText/canceltext: string,
-        WaitTime/waittime: number,
-        OnConfirm/onconfirm: function,
-        OnCancel/oncancel: function
-    )
+function Section:Colorpicker(Data: table
+    Name/name: string,
+    Default/default: Color3,
+    Alpha/alpha: boolean,
+    Flag/flag: string,
+    Callback/callback: function
+)
 
-    function Section:BezierMapper(Data: table
-        Name/name: string,
-        Default/default: table,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:BezierMapper(Data: table
+    Name/name: string,
+    Default/default: table,
+    Flag/flag: string,
+    Callback/callback: function
+)
 
-    function Section:BodyPartBox(Data: table
-        Name/name: string,
-        RigType/rigtype: string,
-        Multiple/multiple: boolean,
-        Default/default: table,
-        Flag/flag: string,
-        Callback/callback: function
-    )
+function Section:BodyPartBox(Data: table
+    Name/name: string,
+    RigType/rigtype: string,
+    Multiple/multiple: boolean,
+    Default/default: table,
+    Flag/flag: string,
+    Callback/callback: function,
+    Tooltips/tooltips: table,
+    Tooltip/tooltip: string
+)
+
+-- Inline extensions (attach to Label / Toggle right side)
+function Label:Keybind(Data: table
+    Name/name: string,
+    Mode/mode: string,
+    Default/default: EnumItem,
+    Flag/flag: string,
+    Callback/callback: function
+)
+
+function Label:Colorpicker(Data: table
+    Name/name: string,
+    Default/default: Color3,
+    Alpha/alpha: boolean,
+    Flag/flag: string,
+    Callback/callback: function
+)
+
+function Toggle:Colorpicker(Data: table
+    Name/name: string,
+    Default/default: Color3,
+    Alpha/alpha: boolean,
+    Flag/flag: string,
+    Callback/callback: function
+)
+
+function Toggle:Keybind(Data: table
+    Name/name: string,
+    Mode/mode: string,
+    Default/default: EnumItem,
+    Flag/flag: string,
+    Callback/callback: function
+) -> Keybind, Extension
+
+######## METHODS ########
+
+Window:SetOpen(Bool: boolean)
+Page:Turn(Bool: boolean)
+Section:SetCollapsed(Bool: boolean)
+Section:ToggleCollapse()
+
+Divider:SetVisibility(Bool: boolean)
+
+Label:Colorpicker(Data: table)
+Label:Keybind(Data: table)
+
+Toggle:Get() -> boolean
+Toggle:Set(Bool: boolean?)
+Toggle:SetVisiblity(Bool: boolean)   -- typo in source, missing second 'i'
+Toggle:Colorpicker(Data: table)
+Toggle:Keybind(Data: table) -> Keybind, Extension
+
+Button:Press()
+Button:SetVisiblity(Bool: boolean)   -- same typo
+
+Slider:Get() -> number
+Slider:Set(Value: number)
+Slider:SetVisibility(Bool: boolean)
+
+Textbox:Get() -> string
+Textbox:Set(Value: string)
+Textbox:SetVisibility(Bool: boolean)
+
+Dropdown:Get()
+Dropdown:Set(Option: string or table)
+Dropdown:SetVisibility(Bool: boolean)
+Dropdown:SetOpen(Bool: boolean)
+Dropdown:Add(Option: string)
+Dropdown:Remove(Option: string)
+Dropdown:Refresh(List: table)
+
+Listbox:Get()
+Listbox:Set(Option: string or table)
+Listbox:SetVisibility(Bool: boolean)
+Listbox:Add(Option: string)
+Listbox:Remove(Option: string)
+Listbox:Refresh(List: table)
+
+Colorpicker:Set(Color: Color3 or string or table, Alpha: number?)
+Colorpicker:Get()
+Colorpicker:SetOpen(Bool: boolean)
+Colorpicker:SetVisibility(Bool: boolean)
+
+BezierMapper:Get() -> table
+BezierMapper:Set(Points: table)
+BezierMapper:Evaluate(t: number) -> number
+BezierMapper:AddPoint(X: number, Y: number)
+BezierMapper:RemovePoint(Index: number)
+BezierMapper:SetVisibility(Bool: boolean)
+
+BodyPartBox:Get() -> table
+BodyPartBox:Set(Parts: string or table)
+BodyPartBox:TogglePart(PartName: string)
+BodyPartBox:Clear()
+BodyPartBox:SetVisibility(Bool: boolean)
+
+Watermark:SetVisibility(Bool: boolean)
+KeybindList:SetVisibility(Bool: boolean)
+KeybindList:Add(Mode: string, Name: string, Key: string) -> NewKey
+
+## EXTRAS:
+
+Library.Theme       -- table of named Color3 (Background, Inline, Page Background, Border,
+                        Outline, Accent, Element, Hovered Element, Text, Text Border, RiskyText)
+Library.Flags       -- table of current element values keyed by Flag
+Library.SetFlags    -- table of setter functions keyed by Flag
+Library.Font        -- FontFace used by every label
+Library.Tween       -- { Time = 0.3, Style = Exponential, Direction = Out }
+Library.Folders     -- { Directory = "opioids", Configs = "opioids/Configs", Assets = "opioids/Assets" }
+Library.RainbowSpeed -- 0.002 by default
+
+local v = Library.Flags["MyFlag"]
+Library.SetFlags["MyFlag"](newValue)
+
+Library:ChangeTheme("Accent", Color3.fromRGB(255, 0, 0))
 ]]
 
 local LoadingTick = os.clock()
@@ -855,11 +963,6 @@ local Library do
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
             AutomaticSize = Enum.AutomaticSize.XY,
-            -- MUST be > TooltipFrame.ZIndex (300). Under ZIndexBehavior.Global (common in
-            -- exploit gethui() ScreenGuis), ZIndex is absolute across the whole ScreenGui,
-            -- so a label with default ZIndex=1 inside a frame with ZIndex=300 renders
-            -- BELOW the frame's own background -- making the text invisible whenever the
-            -- background is opaque, which looks like "text fades out instantly".
             ZIndex = 301,
             Name = "\0"
         })
@@ -915,22 +1018,15 @@ local Library do
         Element.MouseLeave:Connect(function()
             TooltipGen = TooltipGen + 1
             local MyGen = TooltipGen
-
-            -- MouseLeave fires when the cursor hops onto a CHILD of the element (Indicator, Text, etc.).
-            -- Re-check the bounding box every frame so we only fade out when the cursor truly leaves.
-            -- NOTE: Mouse.X/Y and AbsolutePosition are both in screen space (include the top inset bar),
-            -- so we compare directly with NO inset adjustment. Subtracting GuiInset here (previous bug)
-            -- shifted the cursor up ~36px and made IsOutside return true while still hovering the element.
             local function IsOutside()
                 local P, S = Element.AbsolutePosition, Element.AbsoluteSize
                 return not (Mouse.X >= P.X and Mouse.X <= P.X + S.X
                         and Mouse.Y >= P.Y and Mouse.Y <= P.Y + S.Y)
             end
 
-            local function FadeOut()
+            local FadeOut = function()
                 if TooltipGen ~= MyGen then return end
                 if not IsOutside() then
-                    -- Cursor is still over the element (or one of its children). Re-check next frame.
                     task.defer(FadeOut)
                     return
                 end
@@ -960,8 +1056,6 @@ local Library do
 
                 local CompletedConn
                 CompletedConn = T1.Completed:Connect(function(PlaybackState)
-                    -- Only hide on natural completion -- Cancel() also fires Completed and would briefly
-                    -- yank Visible=false mid re-enter.
                     if PlaybackState == Enum.PlaybackState.Completed and not TooltipActive then
                         TooltipFrame.Instance.Visible = false
                     end
@@ -1119,19 +1213,11 @@ local Library do
     end
 
     Library.SaveConfig = function(self, Config)
-        -- Note: callers (Settings module) pass `Name .. ".json"` already, so we
-        -- use `Config` directly without re-appending ".json".
-        -- Library.Folders.Configs already includes the directory prefix ("kimikahax/Configs"),
-        -- so do NOT prepend Library.Folders.Directory again — that produced "kimikahax/kimikahax/Configs".
-        -- Also dropped the isfile guard so users can create NEW configs, not just overwrite existing ones.
         writefile(Library.Folders.Configs .. "/" .. Config, Library:GetConfig())
         Library:Notification("Saved config " .. Config, 5, Color3.fromRGB(0, 255, 0))
     end
 
     Library.RefreshConfigsList = function(self, Element)
-        -- Simplified: the previous diff logic was dead code (#List ~= CurrentList
-        -- always compared a number against a table reference, so IsNew was always true).
-        -- Just rebuild the list every call.
         local List = { }
 
         for Index, Value in listfiles(Library.Folders.Configs) do
@@ -1609,15 +1695,6 @@ local Library do
                 ZIndex = 51,
                 Name = "\0"
             })
-
-            Instances:Create("UIStroke", {
-                Parent = Items["Popup"].Instance,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                Name = "\0",
-                Color = FromRGB(235, 157, 255),
-                Thickness = 1
-            }):AddToTheme({Color = "Accent"})
 
             Instances:Create("UIGradient", {
                 Parent = Items["Popup"].Instance,
@@ -2169,9 +2246,6 @@ local Library do
         end)
 
         local UpdateCopyIconPositions = function()
-            -- Content frame sits at y=21 inside Items["Section"] (the section header is 21px tall:
-            -- 2px AccentLine + 15px Text + 4px gap). The old code used y=26 which was 5px too low,
-            -- pushing the clipboard icons below the text they were meant to sit next to.
             local NameW = DetailName.TextBounds.X
             local IdW = DetailId.TextBounds.X
             if NameW > 0 then
@@ -2960,8 +3034,6 @@ local Library do
         end
 
         local Items = { } do
-            -- Simple structure: one Window frame with Inline-colored background (grey)
-            -- and an Accent UIStroke (purple outline). No nested sub-frame.
             Items["Window"] = Instances:Create("Frame", {
                 Parent = Library.Holder.Instance,
                 Size = UDim2New(0, 290, 0, 0),
@@ -5876,10 +5948,6 @@ local Library do
                 Name = "\0"
             })
 
-            -- TextButton (not TextLabel) so the arrow actually captures clicks
-            -- even with BackgroundTransparency = 1. TextLabel doesn't receive
-            -- input events when its background is transparent, so the expand/collapse
-            -- InputBegan handler below would never fire.
             Entry.Arrow = Instances:Create("TextButton", {
                 Parent = Entry.Button.Instance,
                 FontFace = Library.Font,
@@ -6283,37 +6351,31 @@ local Library do
             Name = "Configs",
             Side = 1
         })
-
-        -- ── Custom path explorer for configs ──────────────────────────────
-        -- Replaces the old ConfigList Listbox. Lets the user navigate the
-        -- executor's workspace folder, see folders + .json files, click a
-        -- folder to enter it, click the folder-name header to go back up.
-        -- Clicking a .json file selects it as the load/delete target.
         local CurrentExplorerPath = Library.Folders.Configs
-        local SelectedConfigPath  = nil  -- full path of currently-selected .json
-        local SelectedConfigName  = nil  -- display name (without .json)
-        local SelectedEntryLabel  = nil  -- ref to the selected row's label so we can un-highlight
+        local SelectedConfigPath  = nil
+        local SelectedConfigName  = nil
+        local SelectedEntryLabel  = nil
 
-        local function Explorer_GetNameFromPath(Path)
+        local Explorer_GetNameFromPath = function(Path)
             local Name = StringGSub(Path or "", ".*[/\\]", "")
             return Name
         end
 
-        local function Explorer_GetParentPath(Path)
+        local Explorer_GetParentPath = function(Path)
             if not Path or Path == "" then return "" end
             local Parent = StringGSub(Path, "[/\\][^/\\]+$", "")
             if Parent == Path then return "" end
             return Parent
         end
 
-        local function Explorer_GetFolderLabel(Path)
+        local Explorer_GetFolderLabel = function(Path)
             if Path == "" or Path == "." then return "Workspace" end
             local Name = Explorer_GetNameFromPath(Path)
             if Name == "" then return "Workspace" end
             return Name
         end
 
-        -- Container frame for the whole explorer (header + scroll list)
+
         local ExplorerContainer = Instances:Create("Frame", {
             Parent = ConfigSection.Elements["Content"].Instance,
             BackgroundTransparency = 1,
@@ -6322,8 +6384,6 @@ local Library do
             Name = "\0",
         })
 
-        -- Header (clickable TextButton): folder icon + current folder name.
-        -- Clicking it navigates up one level.
         local ExplorerHeader = Instances:Create("TextButton", {
             Parent = ExplorerContainer.Instance,
             Size = UDim2New(1, 0, 0, 22),
@@ -6350,7 +6410,7 @@ local Library do
             Position = UDim2New(0, 6, 0.5, -7),
             BackgroundTransparency = 1,
             Image = Library:GetImage("Folder"),
-            ImageColor3 = FromRGB(170, 170, 178),  -- grey-ish, not too grey
+            ImageColor3 = FromRGB(170, 170, 178),
             Name = "\0",
         })
 
@@ -6370,7 +6430,6 @@ local Library do
         })
         HeaderLabel:AddToTheme({TextColor3 = "Text"})
 
-        -- Up-arrow chevron on the right of the header
         local HeaderChevron = Instances:Create("TextLabel", {
             Parent = ExplorerHeader.Instance,
             FontFace = Library.Font,
@@ -6386,7 +6445,6 @@ local Library do
             Name = "\0",
         })
 
-        -- ScrollingFrame for the entries
         local ExplorerScroll = Instances:Create("ScrollingFrame", {
             Parent = ExplorerContainer.Instance,
             Position = UDim2New(0, 0, 0, 24),
@@ -6421,10 +6479,9 @@ local Library do
             PaddingBottom = UDimNew(0, 2),
         })
 
-        -- Track current entry buttons so we can clean them up on rebuild
         local ExplorerEntryButtons = {}
 
-        local function Explorer_ClearEntries()
+        local Explorer_ClearEntries = function()
             for _, Btn in ExplorerEntryButtons do
                 pcall(function()
                     if Btn and Btn.Instance then
@@ -6436,7 +6493,7 @@ local Library do
             SelectedEntryLabel = nil
         end
 
-        local function Explorer_BuildEntries()
+        local Explorer_BuildEntries = function()
             Explorer_ClearEntries()
 
             local Success, Files = pcall(function()
@@ -6463,7 +6520,6 @@ local Library do
                 return
             end
 
-            -- Partition into folders and .json files
             local Folders = {}
             local JsonFiles = {}
 
@@ -6486,7 +6542,6 @@ local Library do
             local LayoutOrder = 1
             local TotalHeight = 4
 
-            -- Folder rows
             for _, Folder in Folders do
                 local Btn = Instances:Create("TextButton", {
                     Parent = ExplorerScroll.Instance,
@@ -6511,14 +6566,14 @@ local Library do
                     Position = UDim2New(0, 7, 0.5, -6),
                     BackgroundTransparency = 1,
                     Image = Library:GetImage("Folder"),
-                    ImageColor3 = FromRGB(170, 170, 178),  -- grey-ish
+                    ImageColor3 = FromRGB(170, 170, 178),
                     Name = "\0",
                 })
 
                 local Label = Instances:Create("TextLabel", {
                     Parent = Btn.Instance,
                     FontFace = Library.Font,
-                    TextColor3 = FromRGB(180, 180, 188),  -- grey-ish text for folders
+                    TextColor3 = FromRGB(180, 180, 188),
                     Text = Folder.Name,
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 23, 0, 0),
@@ -6587,14 +6642,12 @@ local Library do
                 local RowState = { Selected = false, Label = Label }
 
                 Btn:Connect("MouseButton1Down", function()
-                    -- Un-highlight previous selection
                     if SelectedEntryLabel and SelectedEntryLabel.Instance then
                         SelectedEntryLabel.Instance.TextColor3 = Library.Theme.Text
                         SelectedEntryLabel.Instance.TextTransparency = 0.48
                     end
 
                     if RowState.Selected then
-                        -- Deselect
                         RowState.Selected = false
                         SelectedConfigPath = nil
                         SelectedConfigName = nil
@@ -6602,7 +6655,6 @@ local Library do
                         Label.Instance.TextColor3 = Library.Theme.Text
                         Label.Instance.TextTransparency = 0.48
                     else
-                        -- Select this file
                         RowState.Selected = true
                         SelectedConfigPath = File.FullPath
                         SelectedConfigName = StringGSub(File.Name, "%.json$", "")
@@ -6631,7 +6683,6 @@ local Library do
             ExplorerScroll.Instance.CanvasSize = UDim2New(0, 0, 0, TotalHeight)
         end
 
-        -- Header click → navigate up
         ExplorerHeader:Connect("MouseButton1Down", function()
             local Parent = Explorer_GetParentPath(CurrentExplorerPath)
             if Parent ~= CurrentExplorerPath then
@@ -6646,18 +6697,16 @@ local Library do
         -- Initial build
         Explorer_BuildEntries()
 
-        -- Textbox for save-as name
         ConfigSection:Textbox({
             Name = "Config Name",
             Default = "",
             Placeholder = "Enter config name (for Save As)...",
             Flag = "Settings_ConfigName",
             Callback = function(Value)
-                -- Used by Save button below
             end
         })
 
-        local function Explorer_Refresh()
+        local Explorer_Refresh = function()
             SelectedConfigPath = nil
             SelectedConfigName = nil
             Explorer_BuildEntries()
@@ -6844,7 +6893,7 @@ local Library do
         UISettingsSection:Textbox({
             Name = "Spotify Token",
             Default = "",
-            Placeholder = "Paste token here (no Bearer prefix)...",
+            Placeholder = "Paste token here...",
             Flag = "Settings_SpotifyToken",
             Callback = function(Value)
                 Library.SpotifyToken = Value
@@ -6852,7 +6901,7 @@ local Library do
         })
 
         UISettingsSection:Button({
-            Name = "Set Token & Refresh",
+            Name = "Set Token",
             Callback = function()
                 local Token = Library.Flags["Settings_SpotifyToken"]
                 if Token and type(Token) == "string" and Token ~= "" then
@@ -6901,7 +6950,7 @@ local Library do
         })
 
         local InstanceTreeToggle = UISettingsSection:Toggle({
-            Name = "Show Instance Tree",
+            Name = "Show Instance Viewer",
             Default = false,
             Flag = "Settings_InstanceTree",
             Callback = function(Value)
@@ -6965,11 +7014,11 @@ local Library do
             Side = 1
         })
 
-        AboutSection:Label({ Name = "kimikahax v1.0.0", Alignment = "Center" })
-        AboutSection:Label({ Name = "Based on thugsense + utopia", Alignment = "Center" })
+        AboutSection:Label({ Name = "opioid$$ v1.0.0", Alignment = "Center" })
+        AboutSection:Label({ Name = "Cheat with style.", Alignment = "Center" })
         AboutSection:Divider()
-        AboutSection:Label({ Name = "Press Z to toggle the menu.", Alignment = "Center" })
-        AboutSection:Label({ Name = "Made with Library framework.", Alignment = "Center" })
+        AboutSection:Label({ Name = "- unvhook (backend)", Alignment = "Center" })
+        AboutSection:Label({ Name = "- Onyx (backend, frontend)", Alignment = "Center" })
 
         AboutSection:Button({
             Name = "Unload Library",
@@ -6981,7 +7030,7 @@ local Library do
         AboutSection:Button({
             Name = "Copy Discord",
             Callback = function()
-                setclipboard("https://discord.gg/your-invite")
+                setclipboard("https://discord.gg/spoofing")
                 Library:Notification("Discord copied to clipboard", 3, Library.Theme.Accent)
             end
         })
