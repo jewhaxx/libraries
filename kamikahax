@@ -266,6 +266,7 @@ local Library do
             ["Checkers"] = { "Checkers.png", "https://github.com/sametexe001/images/blob/main/checkers.png?raw=true" },
             ["Resize"] = { "Resize.png", "https://github.com/sametexe001/images/blob/main/resize.png?raw=true" },
             ["Clipboard"] = { "Clipboard.png", "https://media.discordapp.net/attachments/1511026013168205997/1522311793903534110/GbECNgAAAAZJREFUAwAeC8TTur01BwAAAABJRU5ErkJggg.png?ex=6a4802d6&is=6a46b156&hm=f39f0f207cd47c1e8e6ee57cfa7b00beedd5dfba7563911a70dc9634626e0cd0&=&format=webp&quality=lossless&width=1024&height=1024" },
+            ["Folder"] = { "Folder.png", "https://img.icons8.com/?size=100&id=2yO6UjBrwe5F&format=png&color=FFFFFF" },
         },
 
         Pages = { },
@@ -1430,8 +1431,8 @@ local Library do
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0",
-                Color = FromRGB(27, 27, 32)
-            }):AddToTheme({Color = "Outline"})
+                Color = FromRGB(235, 157, 255)
+            }):AddToTheme({Color = "Accent"})
             
             Items["AccentLine"] = Instances:Create("Frame", {
                 Parent = Items["KeybindList"].Instance,
@@ -2969,22 +2970,15 @@ local Library do
             Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
             Library.MusicPlayerFrame = Items["Window"].Instance
 
-            Instances:Create("UIStroke", {
-                Parent = Items["Window"].Instance,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                Name = "\0",
-                Color = FromRGB(235, 157, 255)
-            }):AddToTheme({Color = "Accent"})
-
             Items["Window"]:MakeDraggable()
 
             Instances:Create("UIStroke", {
                 Parent = Items["Window"].Instance,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0",
                 Color = FromRGB(27, 27, 32)
-            }):AddToTheme({ Color = "Outline" })
+            }):AddToTheme({ Color = "Inline" })
 
             Instances:Create("UIPadding", {
                 Parent = Items["Window"].Instance,
@@ -4112,13 +4106,6 @@ local Library do
                 Color = FromRGB(235, 157, 255)
             }):AddToTheme({Color = "Accent"})
 
-            Instances:Create("UIStroke", {
-                Parent = Items["Window"].Instance,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                Color = FromRGB(27, 27, 32)
-            }):AddToTheme({ Color = "Outline" })
-
             Instances:Create("UIPadding", {
                 Parent = Items["Window"].Instance,
                 PaddingTop = UDimNew(0, 8),
@@ -5028,13 +5015,6 @@ local Library do
             }):AddToTheme({Color = "Accent"})
 
             Items["Window"]:MakeDraggable()
-
-            Instances:Create("UIStroke", {
-                Parent = Items["Window"].Instance,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                Color = FromRGB(27, 27, 32)
-            }):AddToTheme({ Color = "Outline" })
 
 
             Items["AccentLine"] = Instances:Create("Frame", {
@@ -6294,80 +6274,422 @@ local Library do
             Side = 1
         })
 
-        local CurrentConfigName = nil
+        -- ── Custom path explorer for configs ──────────────────────────────
+        -- Replaces the old ConfigList Listbox. Lets the user navigate the
+        -- executor's workspace folder, see folders + .json files, click a
+        -- folder to enter it, click the folder-name header to go back up.
+        -- Clicking a .json file selects it as the load/delete target.
+        local CurrentExplorerPath = Library.Folders.Configs
+        local SelectedConfigPath  = nil  -- full path of currently-selected .json
+        local SelectedConfigName  = nil  -- display name (without .json)
+        local SelectedEntryLabel  = nil  -- ref to the selected row's label so we can un-highlight
 
-        local ConfigList = ConfigSection:Listbox({
-            Size = 120,
-            Items = { },
-            Multi = false,
-            Flag = "Settings_ConfigList",
-            Callback = function(Value)
-                CurrentConfigName = Value
-            end
+        local function Explorer_GetNameFromPath(Path)
+            local Name = StringGSub(Path or "", ".*[/\\]", "")
+            return Name
+        end
+
+        local function Explorer_GetParentPath(Path)
+            if not Path or Path == "" then return "" end
+            local Parent = StringGSub(Path, "[/\\][^/\\]+$", "")
+            if Parent == Path then return "" end
+            return Parent
+        end
+
+        local function Explorer_GetFolderLabel(Path)
+            if Path == "" or Path == "." then return "Workspace" end
+            local Name = Explorer_GetNameFromPath(Path)
+            if Name == "" then return "Workspace" end
+            return Name
+        end
+
+        -- Container frame for the whole explorer (header + scroll list)
+        local ExplorerContainer = Instances:Create("Frame", {
+            Parent = ConfigSection.Elements["Content"].Instance,
+            BackgroundTransparency = 1,
+            Size = UDim2New(1, 0, 0, 200),
+            BorderSizePixel = 0,
+            Name = "\0",
         })
 
-        ConfigSection:Textbox({
-            Name = "Config Name",
-            Default = "",
-            Placeholder = "Enter config name...",
-            Flag = "Settings_ConfigName",
-            Callback = function(Value)
-                CurrentConfigName = Value
-            end
+        -- Header (clickable TextButton): folder icon + current folder name.
+        -- Clicking it navigates up one level.
+        local ExplorerHeader = Instances:Create("TextButton", {
+            Parent = ExplorerContainer.Instance,
+            Size = UDim2New(1, 0, 0, 22),
+            BackgroundColor3 = FromRGB(20, 20, 25),
+            BorderColor3 = FromRGB(10, 10, 10),
+            BorderSizePixel = 1,
+            Text = "",
+            AutoButtonColor = false,
+            Name = "\0",
+        })
+        ExplorerHeader:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
+
+        Instances:Create("UIStroke", {
+            Parent = ExplorerHeader.Instance,
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            LineJoinMode = Enum.LineJoinMode.Miter,
+            Name = "\0",
+            Color = FromRGB(27, 27, 32)
+        }):AddToTheme({Color = "Outline"})
+
+        local HeaderIcon = Instances:Create("ImageLabel", {
+            Parent = ExplorerHeader.Instance,
+            Size = UDim2New(0, 14, 0, 14),
+            Position = UDim2New(0, 6, 0.5, -7),
+            BackgroundTransparency = 1,
+            Image = Library:GetImage("Folder"),
+            ImageColor3 = FromRGB(170, 170, 178),  -- grey-ish, not too grey
+            Name = "\0",
         })
 
-        local RefreshConfigs = function()
-            local List = { }
+        local HeaderLabel = Instances:Create("TextLabel", {
+            Parent = ExplorerHeader.Instance,
+            FontFace = Library.Font,
+            TextColor3 = FromRGB(215, 215, 215),
+            Text = Explorer_GetFolderLabel(CurrentExplorerPath),
+            BackgroundTransparency = 1,
+            Position = UDim2New(0, 24, 0, 0),
+            Size = UDim2New(1, -30, 1, 0),
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Center,
+            BorderSizePixel = 0,
+            TextSize = 12,
+            Name = "\0",
+        })
+        HeaderLabel:AddToTheme({TextColor3 = "Text"})
+
+        -- Up-arrow chevron on the right of the header
+        local HeaderChevron = Instances:Create("TextLabel", {
+            Parent = ExplorerHeader.Instance,
+            FontFace = Library.Font,
+            TextColor3 = FromRGB(150, 150, 158),
+            Text = "^",
+            BackgroundTransparency = 1,
+            Position = UDim2New(1, -18, 0, 0),
+            Size = UDim2New(0, 14, 1, 0),
+            TextXAlignment = Enum.TextXAlignment.Center,
+            TextYAlignment = Enum.TextYAlignment.Center,
+            BorderSizePixel = 0,
+            TextSize = 12,
+            Name = "\0",
+        })
+
+        -- ScrollingFrame for the entries
+        local ExplorerScroll = Instances:Create("ScrollingFrame", {
+            Parent = ExplorerContainer.Instance,
+            Position = UDim2New(0, 0, 0, 24),
+            Size = UDim2New(1, 0, 1, -24),
+            BackgroundColor3 = FromRGB(15, 15, 20),
+            BorderColor3 = FromRGB(10, 10, 10),
+            BorderSizePixel = 2,
+            ScrollBarThickness = 1,
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            CanvasSize = UDim2New(0, 0, 0, 0),
+            ScrollBarImageColor3 = FromRGB(235, 157, 255),
+            Name = "\0",
+        })
+        ExplorerScroll:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border", ScrollBarImageColor3 = "Accent"})
+
+        Instances:Create("UIStroke", {
+            Parent = ExplorerScroll.Instance,
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            LineJoinMode = Enum.LineJoinMode.Miter,
+            Name = "\0",
+            Color = FromRGB(27, 27, 32)
+        }):AddToTheme({Color = "Outline"})
+
+        Instances:Create("UIListLayout", {
+            Parent = ExplorerScroll.Instance,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+        })
+
+        Instances:Create("UIPadding", {
+            Parent = ExplorerScroll.Instance,
+            PaddingTop = UDimNew(0, 2),
+            PaddingBottom = UDimNew(0, 2),
+        })
+
+        -- Track current entry buttons so we can clean them up on rebuild
+        local ExplorerEntryButtons = {}
+
+        local function Explorer_ClearEntries()
+            for _, Btn in ExplorerEntryButtons do
+                pcall(function()
+                    if Btn and Btn.Instance then
+                        Btn.Instance:Destroy()
+                    end
+                end)
+            end
+            ExplorerEntryButtons = {}
+            SelectedEntryLabel = nil
+        end
+
+        local function Explorer_BuildEntries()
+            Explorer_ClearEntries()
+
             local Success, Files = pcall(function()
-                return listfiles(Library.Folders.Configs)
+                return listfiles(CurrentExplorerPath)
             end)
 
-            if Success and Files then
-                for Index, File in Files do
-                    local Name = StringGSub(File, Library.Folders.Configs .. "\\", "")
-                    Name = StringGSub(Name, Library.Folders.Configs .. "/", "")
-                    Name = StringGSub(Name, ".json", "")
+            if not Success or not Files then
+                local Empty = Instances:Create("TextLabel", {
+                    Parent = ExplorerScroll.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(120, 120, 128),
+                    TextTransparency = 0.4,
+                    Text = "  (empty or unreachable)",
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 18),
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Center,
+                    BorderSizePixel = 0,
+                    TextSize = 11,
+                    Name = "\0",
+                })
+                TableInsert(ExplorerEntryButtons, Empty)
+                ExplorerScroll.Instance.CanvasSize = UDim2New(0, 0, 0, 22)
+                return
+            end
 
-                    TableInsert(List, Name)
+            -- Partition into folders and .json files
+            local Folders = {}
+            local JsonFiles = {}
+
+            for _, File in Files do
+                local Name = Explorer_GetNameFromPath(File)
+                if Name ~= "" and Name ~= "." and Name ~= ".." then
+                    local IsFolder = false
+                    pcall(function() IsFolder = isfolder(File) end)
+                    if IsFolder then
+                        TableInsert(Folders, {Name = Name, FullPath = File})
+                    elseif StringFind(Name:lower(), "%.json$") then
+                        TableInsert(JsonFiles, {Name = Name, FullPath = File})
+                    end
                 end
             end
 
-            ConfigList:Refresh(List)
-            CurrentConfigName = nil
+            table.sort(Folders, function(a, b) return a.Name:lower() < b.Name:lower() end)
+            table.sort(JsonFiles, function(a, b) return a.Name:lower() < b.Name:lower() end)
+
+            local LayoutOrder = 1
+            local TotalHeight = 4
+
+            -- Folder rows
+            for _, Folder in Folders do
+                local Btn = Instances:Create("TextButton", {
+                    Parent = ExplorerScroll.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(0, 0, 0),
+                    Text = "",
+                    AutoButtonColor = false,
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 18),
+                    LayoutOrder = LayoutOrder,
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    Name = "\0",
+                    ZIndex = 5,
+                })
+                LayoutOrder = LayoutOrder + 1
+                TotalHeight = TotalHeight + 18
+
+                local Icon = Instances:Create("ImageLabel", {
+                    Parent = Btn.Instance,
+                    Size = UDim2New(0, 12, 0, 12),
+                    Position = UDim2New(0, 7, 0.5, -6),
+                    BackgroundTransparency = 1,
+                    Image = Library:GetImage("Folder"),
+                    ImageColor3 = FromRGB(170, 170, 178),  -- grey-ish
+                    Name = "\0",
+                })
+
+                local Label = Instances:Create("TextLabel", {
+                    Parent = Btn.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(180, 180, 188),  -- grey-ish text for folders
+                    Text = Folder.Name,
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0, 23, 0, 0),
+                    Size = UDim2New(1, -28, 1, 0),
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Center,
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    Name = "\0",
+                })
+
+                Btn:Connect("MouseButton1Down", function()
+                    CurrentExplorerPath = Folder.FullPath
+                    HeaderLabel.Instance.Text = Explorer_GetFolderLabel(CurrentExplorerPath)
+                    SelectedConfigPath = nil
+                    SelectedConfigName = nil
+                    Explorer_BuildEntries()
+                end)
+
+                Btn:OnHover(function()
+                    Label.Instance.TextColor3 = Library.Theme.Accent
+                end)
+                Btn:OnHoverLeave(function()
+                    Label.Instance.TextColor3 = FromRGB(180, 180, 188)
+                end)
+
+                TableInsert(ExplorerEntryButtons, Btn)
+            end
+
+            -- .json file rows
+            for _, File in JsonFiles do
+                local Btn = Instances:Create("TextButton", {
+                    Parent = ExplorerScroll.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(0, 0, 0),
+                    Text = "",
+                    AutoButtonColor = false,
+                    BackgroundTransparency = 1,
+                    Size = UDim2New(1, 0, 0, 18),
+                    LayoutOrder = LayoutOrder,
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    Name = "\0",
+                    ZIndex = 5,
+                })
+                LayoutOrder = LayoutOrder + 1
+                TotalHeight = TotalHeight + 18
+
+                local Label = Instances:Create("TextLabel", {
+                    Parent = Btn.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    TextTransparency = 0.48,
+                    Text = File.Name,
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0, 23, 0, 0),
+                    Size = UDim2New(1, -28, 1, 0),
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextYAlignment = Enum.TextYAlignment.Center,
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    Name = "\0",
+                })
+                Label:AddToTheme({TextColor3 = "Text"})
+
+                local RowState = { Selected = false, Label = Label }
+
+                Btn:Connect("MouseButton1Down", function()
+                    -- Un-highlight previous selection
+                    if SelectedEntryLabel and SelectedEntryLabel.Instance then
+                        SelectedEntryLabel.Instance.TextColor3 = Library.Theme.Text
+                        SelectedEntryLabel.Instance.TextTransparency = 0.48
+                    end
+
+                    if RowState.Selected then
+                        -- Deselect
+                        RowState.Selected = false
+                        SelectedConfigPath = nil
+                        SelectedConfigName = nil
+                        SelectedEntryLabel = nil
+                        Label.Instance.TextColor3 = Library.Theme.Text
+                        Label.Instance.TextTransparency = 0.48
+                    else
+                        -- Select this file
+                        RowState.Selected = true
+                        SelectedConfigPath = File.FullPath
+                        SelectedConfigName = StringGSub(File.Name, "%.json$", "")
+                        SelectedEntryLabel = RowState
+                        Label.Instance.TextColor3 = Library.Theme.Accent
+                        Label.Instance.TextTransparency = 0
+                    end
+                end)
+
+                Btn:OnHover(function()
+                    if not RowState.Selected then
+                        Label.Instance.TextColor3 = Library.Theme.Accent
+                        Label.Instance.TextTransparency = 0.2
+                    end
+                end)
+                Btn:OnHoverLeave(function()
+                    if not RowState.Selected then
+                        Label.Instance.TextColor3 = Library.Theme.Text
+                        Label.Instance.TextTransparency = 0.48
+                    end
+                end)
+
+                TableInsert(ExplorerEntryButtons, Btn)
+            end
+
+            ExplorerScroll.Instance.CanvasSize = UDim2New(0, 0, 0, TotalHeight)
+        end
+
+        -- Header click → navigate up
+        ExplorerHeader:Connect("MouseButton1Down", function()
+            local Parent = Explorer_GetParentPath(CurrentExplorerPath)
+            if Parent ~= CurrentExplorerPath then
+                CurrentExplorerPath = Parent
+                HeaderLabel.Instance.Text = Explorer_GetFolderLabel(CurrentExplorerPath)
+                SelectedConfigPath = nil
+                SelectedConfigName = nil
+                Explorer_BuildEntries()
+            end
+        end)
+
+        -- Initial build
+        Explorer_BuildEntries()
+
+        -- Textbox for save-as name
+        ConfigSection:Textbox({
+            Name = "Config Name",
+            Default = "",
+            Placeholder = "Enter config name (for Save As)...",
+            Flag = "Settings_ConfigName",
+            Callback = function(Value)
+                -- Used by Save button below
+            end
+        })
+
+        local function Explorer_Refresh()
+            SelectedConfigPath = nil
+            SelectedConfigName = nil
+            Explorer_BuildEntries()
         end
 
         ConfigSection:Button({
             Name = "Save Config",
             Callback = function()
-                local Name = CurrentConfigName
-                if not Name or Name == "" then
-                    Name = Library.Flags["Settings_ConfigName"]
-                end
+                local Name = Library.Flags["Settings_ConfigName"]
                 if not Name or Name == "" then
                     Library:Notification("Enter a config name first", 4, FromRGB(255, 70, 70))
                     return
                 end
 
-                Library:SaveConfig(Name .. ".json")
-                RefreshConfigs()
+                local SavePath = CurrentExplorerPath .. "/" .. Name .. ".json"
+                local Success = pcall(function()
+                    writefile(SavePath, Library:GetConfig())
+                end)
+
+                if Success then
+                    Library:Notification("Saved config " .. Name .. ".json", 5, FromRGB(0, 255, 0))
+                    Explorer_Refresh()
+                else
+                    Library:Notification("Failed to save config", 4, FromRGB(255, 70, 70))
+                end
             end
         })
 
         ConfigSection:Button({
             Name = "Load Config",
             Callback = function()
-                local Name = CurrentConfigName
-                if not Name or Name == "" then
-                    Library:Notification("Select a config first", 4, FromRGB(255, 70, 70))
+                if not SelectedConfigPath then
+                    Library:Notification("Select a .json file first", 4, FromRGB(255, 70, 70))
                     return
                 end
 
-                if not isfile(Library.Folders.Configs .. "/" .. Name .. ".json") then
+                if not isfile(SelectedConfigPath) then
                     Library:Notification("Config not found", 4, FromRGB(255, 70, 70))
                     return
                 end
 
-                local Content = readfile(Library.Folders.Configs .. "/" .. Name .. ".json")
+                local Content = readfile(SelectedConfigPath)
                 Library:LoadConfig(Content)
             end
         })
@@ -6375,26 +6697,29 @@ local Library do
         ConfigSection:Button({
             Name = "Delete Config",
             Callback = function()
-                local Name = CurrentConfigName
-                if not Name or Name == "" then
-                    Library:Notification("Select a config first", 4, FromRGB(255, 70, 70))
+                if not SelectedConfigPath then
+                    Library:Notification("Select a .json file first", 4, FromRGB(255, 70, 70))
                     return
                 end
 
-                Library:DeleteConfig(Name .. ".json")
-                RefreshConfigs()
+                if not isfile(SelectedConfigPath) then
+                    Library:Notification("Config not found", 4, FromRGB(255, 70, 70))
+                    return
+                end
+
+                pcall(function() delfile(SelectedConfigPath) end)
+                Library:Notification("Deleted " .. (SelectedConfigName or "config"), 5, FromRGB(0, 255, 0))
+                Explorer_Refresh()
             end
         })
 
         ConfigSection:Button({
             Name = "Refresh List",
             Callback = function()
-                RefreshConfigs()
+                Explorer_Refresh()
                 Library:Notification("Configs refreshed", 3, Library.Theme.Accent)
             end
         })
-
-        RefreshConfigs()
 
         local UISettingsSection = SettingsPage:Section({
             Name = "UI Settings",
