@@ -2169,13 +2169,16 @@ local Library do
         end)
 
         local UpdateCopyIconPositions = function()
+            -- Content frame sits at y=21 inside Items["Section"] (the section header is 21px tall:
+            -- 2px AccentLine + 15px Text + 4px gap). The old code used y=26 which was 5px too low,
+            -- pushing the clipboard icons below the text they were meant to sit next to.
             local NameW = DetailName.TextBounds.X
             local IdW = DetailId.TextBounds.X
             if NameW > 0 then
-                CopyNameIcon.Position = UDim2New(0, 7 + 74 + NameW + 4, 0, 26 + 2)
+                CopyNameIcon.Position = UDim2New(0, 7 + 74 + NameW + 4, 0, 21 + 1)
             end
             if IdW > 0 then
-                CopyIdIcon.Position = UDim2New(0, 7 + 74 + IdW + 4, 0, 26 + 20)
+                CopyIdIcon.Position = UDim2New(0, 7 + 74 + IdW + 4, 0, 21 + 18)
             end
         end
 
@@ -2957,17 +2960,20 @@ local Library do
         end
 
         local Items = { } do
+            -- Border ring (inner) is Inline-colored; outer UIStroke is Accent.
+            -- Roblox Frames only support one UIStroke, so we get the two-tone effect
+            -- by using BorderColor3 (inner) + UIStroke (outer).
             Items["Window"] = Instances:Create("Frame", {
                 Parent = Library.Holder.Instance,
                 Size = UDim2New(0, 290, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 Name = "\0",
                 Position = UDim2New(0, 200, 0, 100),
-                BorderColor3 = FromRGB(10, 10, 10),
-                BorderSizePixel = 2,
+                BorderColor3 = FromRGB(26, 26, 32),
+                BorderSizePixel = 1,
                 BackgroundColor3 = FromRGB(20, 20, 25)
             })
-            Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
+            Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Inline" })
             Library.MusicPlayerFrame = Items["Window"].Instance
 
             Items["Window"]:MakeDraggable()
@@ -2977,8 +2983,8 @@ local Library do
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0",
-                Color = FromRGB(27, 27, 32)
-            }):AddToTheme({ Color = "Inline" })
+                Color = FromRGB(235, 157, 255)
+            }):AddToTheme({ Color = "Accent" })
 
             Instances:Create("UIPadding", {
                 Parent = Items["Window"].Instance,
@@ -5871,12 +5877,17 @@ local Library do
                 Name = "\0"
             })
 
-            Entry.Arrow = Instances:Create("TextLabel", {
+            -- TextButton (not TextLabel) so the arrow actually captures clicks
+            -- even with BackgroundTransparency = 1. TextLabel doesn't receive
+            -- input events when its background is transparent, so the expand/collapse
+            -- InputBegan handler below would never fire.
+            Entry.Arrow = Instances:Create("TextButton", {
                 Parent = Entry.Button.Instance,
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(200, 200, 208),
                 Text = HasChildren and (Expanded and "-" or "+") or "",
                 BackgroundTransparency = 1,
+                AutoButtonColor = false,
                 Position = UDim2New(0, Depth * 12 + 2, 0, 3),
                 Size = UDim2New(0, 12, 1, -3),
                 TextXAlignment = Enum.TextXAlignment.Center,
@@ -5955,8 +5966,8 @@ local Library do
                 OpenContextMenu(Instance)
             end)
 
-            Entry.Arrow.Instance.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 and HasChildren then
+            Entry.Arrow:Connect("MouseButton1Down", function()
+                if HasChildren then
                     InstanceTree.Expanded[Instance] = not (InstanceTree.Expanded[Instance] == true)
                     RebuildTree()
                 end
