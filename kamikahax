@@ -2965,7 +2965,7 @@ local Library do
             -- as the main window's Items["Inline"]). Creates the nested/inset look.
             Items["Window"] = Instances:Create("Frame", {
                 Parent = Library.Holder.Instance,
-                Size = UDim2New(0, 290, 0, 0),
+                Size = UDim2New(0, 320, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 Name = "\0",
                 Position = UDim2New(0, 200, 0, 100),
