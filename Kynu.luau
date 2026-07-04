@@ -516,64 +516,84 @@ Library.Window = function(Self, Data)
         local TabBtn = Create("TextButton", {
             Name = TabName,
             BackgroundTransparency = 1,
-            Size = UDim2New(1, -16, 0, 48),
+            Size = UDim2New(1, -16, 0, 56),
             Text = "",
             AutoButtonColor = false,
             Parent = Sidebar,
         })
 
-        local Glow = Create("Frame", {
-            Name = "Glow",
-            BackgroundColor3 = Theme.Accent,
-            BackgroundTransparency = 1,
+        local IconContainer = Create("Frame", {
+            Name = "IconContainer",
+            BackgroundColor3 = Theme.Element,
             BorderSizePixel = 0,
-            Size = UDim2New(1, 0, 1, 0),
-            ZIndex = 1,
+            Size = UDim2New(0, 38, 0, 38),
+            Position = UDim2New(0.5, 0, 0, 4),
+            AnchorPoint = Vector2New(0.5, 0),
+            ZIndex = 2,
             Parent = TabBtn,
         })
-        MakeCorner(Glow, 10)
-        local GlowGradient = Create("UIGradient", {
-            Color = ColorSequence.new(Theme.Accent, Theme.AccentDim),
-            Transparency = NumberSequence.new(0.6, 1),
-            Rotation = 90,
-        })
-        GlowGradient.Parent = Glow
+        MakeCorner(IconContainer, 19)
+        MakeStroke(IconContainer, Theme.Border, 1, 0)
+
+        local HasImage = TabData.Image ~= nil
+        local Icon = nil
+        local Letter = nil
+
+        if HasImage then
+            Icon = Create("ImageLabel", {
+                Name = "Icon",
+                BackgroundTransparency = 1,
+                Size = UDim2New(0, 18, 0, 18),
+                Position = UDim2New(0.5, 0, 0.5, 0),
+                AnchorPoint = Vector2New(0.5, 0.5),
+                Image = TabImage,
+                ImageColor3 = Theme.Faded,
+                ZIndex = 3,
+                Parent = IconContainer,
+            })
+        else
+            Letter = Create("TextLabel", {
+                Name = "Letter",
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 1, 0),
+                Text = StringUpper(StringSub(TabName, 1, 1)),
+                ZIndex = 3,
+            })
+            ApplyFont(Letter, 16, Theme.Faded)
+            Letter.TextXAlignment = Enum.TextXAlignment.Center
+            Letter.Parent = IconContainer
+        end
+
+        local SetTabColor = function(Color)
+            if Icon then
+                Tween(Icon, { ImageColor3 = Color }, 0.2)
+            elseif Letter then
+                Tween(Letter, { TextColor3 = Color }, 0.2)
+            end
+        end
 
         local Indicator = Create("Frame", {
             Name = "Indicator",
             BackgroundColor3 = Theme.Accent,
             BackgroundTransparency = 1,
             BorderSizePixel = 0,
-            Size = UDim2New(0, 3, 0, 20),
-            Position = UDim2New(0, -8, 0.5, -10),
-            ZIndex = 2,
+            Size = UDim2New(0, 3, 0, 24),
+            Position = UDim2New(0, -8, 0.5, -12),
+            ZIndex = 4,
             Parent = TabBtn,
         })
         MakeCorner(Indicator, 2)
         local IndicatorGradient = Create("UIGradient", {
             Color = ColorSequence.new(Theme.Accent, Theme.AccentBright),
-            Transparency = NumberSequence.new(0, 0),
             Rotation = 90,
         })
         IndicatorGradient.Parent = Indicator
-
-        local Icon = Create("ImageLabel", {
-            Name = "Icon",
-            BackgroundTransparency = 1,
-            Size = UDim2New(0, 22, 0, 22),
-            Position = UDim2New(0.5, 0, 0.5, -8),
-            Image = TabImage,
-            ImageColor3 = Theme.Faded,
-            ImageTransparency = 0,
-            ZIndex = 3,
-            Parent = TabBtn,
-        })
 
         local Label = Create("TextLabel", {
             Name = "Label",
             BackgroundTransparency = 1,
             Size = UDim2New(1, 0, 0, 12),
-            Position = UDim2New(0, 0, 1, -10),
+            Position = UDim2New(0, 0, 1, -4),
             Text = TabName,
             ZIndex = 3,
         })
@@ -582,10 +602,12 @@ Library.Window = function(Self, Data)
 
         local TabObject = {
             Button = TabBtn,
-            Glow = Glow,
+            IconContainer = IconContainer,
             Indicator = Indicator,
             Icon = Icon,
+            Letter = Letter,
             Label = Label,
+            SetTabColor = SetTabColor,
             Pages = {},
             ActivePage = nil,
             Order = #WindowData.Tabs + 1,
@@ -596,18 +618,18 @@ Library.Window = function(Self, Data)
         local SelectTab = function()
             for _, Other in next, WindowData.Tabs do
                 if Other ~= TabObject then
-                    Tween(Other.Glow, { BackgroundTransparency = 1 }, 0.2)
+                    Tween(Other.IconContainer, { BackgroundColor3 = Theme.Element }, 0.2)
                     Tween(Other.Indicator, { BackgroundTransparency = 1 }, 0.2)
-                    Tween(Other.Icon, { ImageColor3 = Theme.Faded }, 0.2)
+                    Other.SetTabColor(Theme.Faded)
                     Tween(Other.Label, { TextColor3 = Theme.Faded }, 0.2)
                     for _, Page in next, Other.Pages do
                         Page.Frame.Visible = false
                     end
                 end
             end
-            Tween(Glow, { BackgroundTransparency = 0 }, 0.2)
+            Tween(IconContainer, { BackgroundColor3 = Theme.Accent }, 0.2)
             Tween(Indicator, { BackgroundTransparency = 0 }, 0.2)
-            Tween(Icon, { ImageColor3 = Theme.Accent }, 0.2)
+            SetTabColor(Theme.AccentText)
             Tween(Label, { TextColor3 = Theme.Text }, 0.2)
             WindowData.ActiveTab = TabObject
             if TabObject.ActivePage then
@@ -619,12 +641,14 @@ Library.Window = function(Self, Data)
 
         Hover(TabBtn, function()
             if WindowData.ActiveTab ~= TabObject then
-                Tween(Icon, { ImageColor3 = Theme.Subtext }, 0.15)
+                Tween(IconContainer, { BackgroundColor3 = Theme.ElementHover }, 0.15)
+                SetTabColor(Theme.Subtext)
                 Tween(Label, { TextColor3 = Theme.Subtext }, 0.15)
             end
         end, function()
             if WindowData.ActiveTab ~= TabObject then
-                Tween(Icon, { ImageColor3 = Theme.Faded }, 0.15)
+                Tween(IconContainer, { BackgroundColor3 = Theme.Element }, 0.15)
+                SetTabColor(Theme.Faded)
                 Tween(Label, { TextColor3 = Theme.Faded }, 0.15)
             end
         end)
@@ -640,6 +664,7 @@ Library.Window = function(Self, Data)
 
             local PageBtn = Create("TextButton", {
                 Name = PageName,
+                BackgroundColor3 = Theme.Element,
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 AutomaticSize = Enum.AutomaticSize.X,
@@ -648,7 +673,8 @@ Library.Window = function(Self, Data)
                 AutoButtonColor = false,
                 Parent = SubTabList,
             })
-            MakePadding(PageBtn, 12)
+            MakeCorner(PageBtn, 6)
+            MakePadding(PageBtn, 14)
 
             local PageLabel = Create("TextLabel", {
                 Name = "Label",
@@ -713,27 +739,23 @@ Library.Window = function(Self, Data)
                     if Other ~= PageObject then
                         Other.Frame.Visible = false
                         Tween(Other.Label, { TextColor3 = Theme.Subtext }, 0.15)
-                        Tween(Other.Underline, {
-                            BackgroundTransparency = 1,
-                            Size = UDim2New(0, 0, 0, 2),
-                        }, 0.2)
+                        Tween(Other.Button, { BackgroundTransparency = 1 }, 0.15)
                     end
                 end
                 PageFrame.Visible = true
-                Tween(PageLabel, { TextColor3 = Theme.Text }, 0.15)
-                Tween(Underline, {
-                    BackgroundTransparency = 0,
-                    Size = UDim2New(1, -24, 0, 2),
-                }, 0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                Tween(PageLabel, { TextColor3 = Theme.AccentText }, 0.15)
+                Tween(PageBtn, { BackgroundTransparency = 0, BackgroundColor3 = Theme.Accent }, 0.15)
                 TabObject.ActivePage = PageObject
             end
 
             Hover(PageBtn, function()
                 if TabObject.ActivePage ~= PageObject then
+                    Tween(PageBtn, { BackgroundTransparency = 0, BackgroundColor3 = Theme.ElementHover }, 0.15)
                     Tween(PageLabel, { TextColor3 = Theme.Text }, 0.15)
                 end
             end, function()
                 if TabObject.ActivePage ~= PageObject then
+                    Tween(PageBtn, { BackgroundTransparency = 1 }, 0.15)
                     Tween(PageLabel, { TextColor3 = Theme.Subtext }, 0.15)
                 end
             end)
@@ -2057,7 +2079,7 @@ Library.Window = function(Self, Data)
                     Connect(Palette.InputBegan, function(Input)
                         if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                             PaletteDragging = true
-                            local Rel = UserInputService:GetMouseLocation() - Palette.AbsolutePosition
+                            local Rel = Services.UserInputService:GetMouseLocation() - Palette.AbsolutePosition
                             Sat = MathClamp(Rel.X / Palette.AbsoluteSize.X, 0, 1)
                             Val = MathClamp(1 - (Rel.Y / Palette.AbsoluteSize.Y), 0, 1)
                             UpdateColor()
@@ -2070,7 +2092,7 @@ Library.Window = function(Self, Data)
                     end)
                     Connect(Services.UserInputService.InputChanged, function(Input)
                         if PaletteDragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
-                            local Rel = UserInputService:GetMouseLocation() - Palette.AbsolutePosition
+                            local Rel = Services.UserInputService:GetMouseLocation() - Palette.AbsolutePosition
                             Sat = MathClamp(Rel.X / Palette.AbsoluteSize.X, 0, 1)
                             Val = MathClamp(1 - (Rel.Y / Palette.AbsoluteSize.Y), 0, 1)
                             UpdateColor()
@@ -2081,7 +2103,7 @@ Library.Window = function(Self, Data)
                     Connect(HueBar.InputBegan, function(Input)
                         if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                             HueDragging = true
-                            local Rel = UserInputService:GetMouseLocation() - HueBar.AbsolutePosition
+                            local Rel = Services.UserInputService:GetMouseLocation() - HueBar.AbsolutePosition
                             Hue = MathClamp(Rel.X / HueBar.AbsoluteSize.X, 0, 1)
                             UpdateColor()
                         end
@@ -2093,7 +2115,7 @@ Library.Window = function(Self, Data)
                     end)
                     Connect(Services.UserInputService.InputChanged, function(Input)
                         if HueDragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
-                            local Rel = UserInputService:GetMouseLocation() - HueBar.AbsolutePosition
+                            local Rel = Services.UserInputService:GetMouseLocation() - HueBar.AbsolutePosition
                             Hue = MathClamp(Rel.X / HueBar.AbsoluteSize.X, 0, 1)
                             UpdateColor()
                         end
@@ -2103,7 +2125,7 @@ Library.Window = function(Self, Data)
                     Connect(AlphaBar.InputBegan, function(Input)
                         if Input.UserInputType == Enum.UserInputType.MouseButton1 then
                             AlphaDragging = true
-                            local Rel = UserInputService:GetMouseLocation() - AlphaBar.AbsolutePosition
+                            local Rel = Services.UserInputService:GetMouseLocation() - AlphaBar.AbsolutePosition
                             CurrentAlpha = MathClamp(1 - (Rel.X / AlphaBar.AbsoluteSize.X), 0, 1)
                             UpdateColor()
                         end
@@ -2115,7 +2137,7 @@ Library.Window = function(Self, Data)
                     end)
                     Connect(Services.UserInputService.InputChanged, function(Input)
                         if AlphaDragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
-                            local Rel = UserInputService:GetMouseLocation() - AlphaBar.AbsolutePosition
+                            local Rel = Services.UserInputService:GetMouseLocation() - AlphaBar.AbsolutePosition
                             CurrentAlpha = MathClamp(1 - (Rel.X / AlphaBar.AbsoluteSize.X), 0, 1)
                             UpdateColor()
                         end
@@ -2165,7 +2187,7 @@ Library.Window = function(Self, Data)
 
                     Connect(Services.UserInputService.InputBegan, function(Input)
                         if PickerOpen and Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                            local MousePos = UserInputService:GetMouseLocation()
+                            local MousePos = Services.UserInputService:GetMouseLocation()
                             local PickerPos = Picker.AbsolutePosition
                             local PickerEnd = PickerPos + Picker.AbsoluteSize
                             if MousePos.X < PickerPos.X or MousePos.X > PickerEnd.X or MousePos.Y < PickerPos.Y or MousePos.Y > PickerEnd.Y then
@@ -2473,15 +2495,6 @@ Library.Window = function(Self, Data)
             WindowData:Show()
         end
     end
-
-    Connect(Services.UserInputService.InputChanged, function(Input, Processed)
-        if Processed then return end
-        if Input.UserInputType == Enum.UserInputType.MouseMovement then
-            local Pos = UserInputService:GetMouseLocation()
-            if WindowData.ActiveTab then
-            end
-        end
-    end)
 
     return WindowData
 end
