@@ -29,25 +29,25 @@ local TitleSize = 14
 local SmallSize = 11
 
 local Theme = {
-    Background = FromRGB(8, 10, 14),
-    Window = FromRGB(14, 16, 22),
-    Sidebar = FromRGB(10, 12, 16),
-    TabBar = FromRGB(14, 16, 22),
-    Section = FromRGB(18, 20, 26),
-    Element = FromRGB(24, 26, 34),
-    ElementHover = FromRGB(30, 32, 42),
-    ElementActive = FromRGB(36, 38, 50),
-    Border = FromRGB(36, 38, 48),
-    Text = FromRGB(228, 230, 236),
-    Subtext = FromRGB(140, 144, 158),
-    Faded = FromRGB(90, 94, 108),
-    Accent = FromRGB(34, 211, 238),
-    AccentBright = FromRGB(125, 235, 255),
-    AccentDim = FromRGB(14, 116, 144),
-    AccentText = FromRGB(8, 10, 14),
-    Danger = FromRGB(239, 68, 68),
-    ToggleOff = FromRGB(46, 48, 60),
-    SliderTrack = FromRGB(36, 38, 48),
+    Background = FromRGB(0, 0, 0),
+    Window = FromRGB(8, 8, 12),
+    Sidebar = FromRGB(5, 5, 8),
+    TabBar = FromRGB(8, 8, 12),
+    Section = FromRGB(20, 20, 24),
+    Element = FromRGB(28, 28, 34),
+    ElementHover = FromRGB(36, 36, 44),
+    ElementActive = FromRGB(44, 44, 54),
+    Border = FromRGB(45, 45, 55),
+    Text = FromRGB(240, 240, 245),
+    Subtext = FromRGB(160, 160, 170),
+    Faded = FromRGB(100, 100, 110),
+    Accent = FromRGB(0, 212, 255),
+    AccentBright = FromRGB(120, 235, 255),
+    AccentDim = FromRGB(0, 130, 170),
+    AccentText = FromRGB(0, 0, 0),
+    Danger = FromRGB(255, 75, 75),
+    ToggleOff = FromRGB(50, 50, 60),
+    SliderTrack = FromRGB(35, 35, 42),
 }
 
 local Library = {
@@ -619,6 +619,10 @@ Library.Window = function(Self, Data)
             for _, Other in next, WindowData.Tabs do
                 if Other ~= TabObject then
                     Tween(Other.IconContainer, { BackgroundColor3 = Theme.Element }, 0.2)
+                    local OtherStroke = Other.IconContainer:FindFirstChildOfClass("UIStroke")
+                    if OtherStroke then
+                        Tween(OtherStroke, { Color = Theme.Border, Thickness = 1 }, 0.2)
+                    end
                     Tween(Other.Indicator, { BackgroundTransparency = 1 }, 0.2)
                     Other.SetTabColor(Theme.Faded)
                     Tween(Other.Label, { TextColor3 = Theme.Faded }, 0.2)
@@ -627,9 +631,13 @@ Library.Window = function(Self, Data)
                     end
                 end
             end
-            Tween(IconContainer, { BackgroundColor3 = Theme.Accent }, 0.2)
+            Tween(IconContainer, { BackgroundColor3 = Theme.Sidebar }, 0.2)
+            local Stroke = IconContainer:FindFirstChildOfClass("UIStroke")
+            if Stroke then
+                Tween(Stroke, { Color = Theme.Accent, Thickness = 2 }, 0.2)
+            end
             Tween(Indicator, { BackgroundTransparency = 0 }, 0.2)
-            SetTabColor(Theme.AccentText)
+            SetTabColor(Theme.Accent)
             Tween(Label, { TextColor3 = Theme.Text }, 0.2)
             WindowData.ActiveTab = TabObject
             if TabObject.ActivePage then
@@ -779,43 +787,43 @@ Library.Window = function(Self, Data)
                     AutomaticSize = Enum.AutomaticSize.Y,
                     Parent = ParentColumn,
                 })
-                MakeCorner(SectionFrame, 6)
+                MakeCorner(SectionFrame, 8)
                 MakeStroke(SectionFrame, Theme.Border, 1, 0)
 
                 local Header = Create("Frame", {
                     Name = "Header",
-                    BackgroundColor3 = Theme.Element,
-                    BackgroundTransparency = 1,
+                    BackgroundColor3 = Theme.Section,
+                    BackgroundTransparency = 0,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 36),
+                    Size = UDim2New(1, 0, 0, 38),
                     Parent = SectionFrame,
                 })
-                MakeCorner(Header, 6)
+                MakeCorner(Header, 8)
                 Create("Frame", {
                     Name = "HeaderBottomCover",
-                    BackgroundColor3 = Theme.Element,
+                    BackgroundColor3 = Theme.Section,
                     BorderSizePixel = 0,
-                    Size = UDim2New(1, 0, 0, 8),
-                    Position = UDim2New(0, 0, 1, -6),
+                    Size = UDim2New(1, 0, 0, 10),
+                    Position = UDim2New(0, 0, 1, -8),
                     Parent = Header,
                 })
 
                 local HeaderLabel = Create("TextLabel", {
                     Name = "Title",
                     BackgroundTransparency = 1,
-                    Size = UDim2New(1, -24, 1, 0),
-                    Position = UDim2New(0, 14, 0, 0),
+                    Size = UDim2New(1, -28, 1, 0),
+                    Position = UDim2New(0, 16, 0, 0),
                     Text = StringUpper(StringSub(SectionName, 1, 1)) .. StringSub(SectionName, 2),
                 })
-                ApplyFont(HeaderLabel, 12, Theme.Subtext)
+                ApplyFont(HeaderLabel, 12, Theme.Text)
                 HeaderLabel.Parent = Header
 
                 local HeaderAccent = Create("Frame", {
                     Name = "Accent",
                     BackgroundColor3 = Theme.Accent,
                     BorderSizePixel = 0,
-                    Size = UDim2New(0, 3, 0, 14),
-                    Position = UDim2New(0, 4, 0.5, -7),
+                    Size = UDim2New(0, 3, 0, 16),
+                    Position = UDim2New(0, 6, 0.5, -8),
                     Parent = Header,
                 })
                 MakeCorner(HeaderAccent, 2)
@@ -825,11 +833,11 @@ Library.Window = function(Self, Data)
                     BackgroundTransparency = 1,
                     BorderSizePixel = 0,
                     Size = UDim2New(1, 0, 0, 0),
-                    Position = UDim2New(0, 0, 0, 36),
+                    Position = UDim2New(0, 0, 0, 38),
                     AutomaticSize = Enum.AutomaticSize.Y,
                     Parent = SectionFrame,
                 })
-                local ContentList = MakeList(Content, 8)
+                local ContentList = MakeList(Content, 6)
                 MakePadding(Content, 12)
 
                 local SectionObject = {
@@ -902,21 +910,23 @@ Library.Window = function(Self, Data)
                     local Flag = ToggleData.Flag
                     local Callback = ToggleData.Callback or function() end
 
-                    local Toggle = Create("Frame", {
+                    local Toggle = Create("TextButton", {
                         Name = "Toggle",
                         BackgroundColor3 = Theme.Element,
                         BackgroundTransparency = 0,
                         BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, 32),
+                        Size = UDim2New(1, 0, 0, 36),
+                        Text = "",
+                        AutoButtonColor = false,
                         Parent = Content,
                     })
-                    MakeCorner(Toggle, 4)
+                    MakeCorner(Toggle, 6)
 
                     local ToggleLabel = Create("TextLabel", {
                         Name = "Label",
                         BackgroundTransparency = 1,
-                        Size = UDim2New(1, -60, 1, 0),
-                        Position = UDim2New(0, 10, 0, 0),
+                        Size = UDim2New(1, -70, 1, 0),
+                        Position = UDim2New(0, 12, 0, 0),
                         Text = ToggleName,
                     })
                     ApplyFont(ToggleLabel, BodySize, Theme.Text)
@@ -926,21 +936,21 @@ Library.Window = function(Self, Data)
                         Name = "Switch",
                         BackgroundColor3 = Theme.ToggleOff,
                         BorderSizePixel = 0,
-                        Size = UDim2New(0, 36, 0, 18),
-                        Position = UDim2New(1, -44, 0.5, -9),
+                        Size = UDim2New(0, 46, 0, 22),
+                        Position = UDim2New(1, -54, 0.5, -11),
                         Parent = Toggle,
                     })
-                    MakeCorner(Switch, 9)
+                    MakeCorner(Switch, 11)
 
                     local Knob = Create("Frame", {
                         Name = "Knob",
                         BackgroundColor3 = Theme.Faded,
                         BorderSizePixel = 0,
-                        Size = UDim2New(0, 14, 0, 14),
-                        Position = UDim2New(0, 2, 0.5, -7),
+                        Size = UDim2New(0, 18, 0, 18),
+                        Position = UDim2New(0, 2, 0.5, -9),
                         Parent = Switch,
                     })
-                    MakeCorner(Knob, 7)
+                    MakeCorner(Knob, 9)
 
                     local State = Default and true or false
                     local Modifiers = {}
@@ -951,14 +961,14 @@ Library.Window = function(Self, Data)
                             Tween(Switch, { BackgroundColor3 = Theme.Accent }, 0.18)
                             Tween(Knob, {
                                 BackgroundColor3 = Theme.AccentText,
-                                Position = UDim2New(1, -16, 0.5, -7),
+                                Position = UDim2New(1, -20, 0.5, -9),
                             }, 0.18, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
                             Tween(ToggleLabel, { TextColor3 = Theme.Text }, 0.15)
                         else
                             Tween(Switch, { BackgroundColor3 = Theme.ToggleOff }, 0.18)
                             Tween(Knob, {
                                 BackgroundColor3 = Theme.Faded,
-                                Position = UDim2New(0, 2, 0.5, -7),
+                                Position = UDim2New(0, 2, 0.5, -9),
                             }, 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
                             Tween(ToggleLabel, { TextColor3 = Theme.Subtext }, 0.15)
                         end
@@ -1035,12 +1045,12 @@ Library.Window = function(Self, Data)
                         Name = "Button",
                         BackgroundColor3 = Theme.Element,
                         BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, 32),
+                        Size = UDim2New(1, 0, 0, 36),
                         Text = "",
                         AutoButtonColor = false,
                         Parent = Content,
                     })
-                    MakeCorner(Button, 4)
+                    MakeCorner(Button, 6)
                     MakeStroke(Button, Theme.Border, 1, 0)
 
                     local ButtonLabel = Create("TextLabel", {
@@ -1107,7 +1117,7 @@ Library.Window = function(Self, Data)
                         Size = UDim2New(1, 0, 0, 44),
                         Parent = Content,
                     })
-                    MakeCorner(Slider, 4)
+                    MakeCorner(Slider, 6)
                     MakePadding(Slider, 10)
 
                     local SliderLabel = Create("TextLabel", {
@@ -1262,10 +1272,10 @@ Library.Window = function(Self, Data)
                         Name = "Textbox",
                         BackgroundColor3 = Theme.Element,
                         BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, 32),
+                        Size = UDim2New(1, 0, 0, 36),
                         Parent = Content,
                     })
-                    MakeCorner(Textbox, 4)
+                    MakeCorner(Textbox, 6)
 
                     local TextboxLabel = Create("TextLabel", {
                         Name = "Label",
@@ -1355,21 +1365,23 @@ Library.Window = function(Self, Data)
                     local Flag = DropdownData.Flag
                     local Callback = DropdownData.Callback or function() end
 
-                    local Dropdown = Create("Frame", {
+                    local Dropdown = Create("TextButton", {
                         Name = "Dropdown",
                         BackgroundColor3 = Theme.Element,
                         BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, 32),
+                        Size = UDim2New(1, 0, 0, 36),
                         AutomaticSize = Enum.AutomaticSize.None,
+                        Text = "",
+                        AutoButtonColor = false,
                         Parent = Content,
                     })
-                    MakeCorner(Dropdown, 4)
+                    MakeCorner(Dropdown, 6)
 
                     local DropdownLabel = Create("TextLabel", {
                         Name = "Label",
                         BackgroundTransparency = 1,
                         Size = UDim2New(1, -100, 1, 0),
-                        Position = UDim2New(0, 10, 0, 0),
+                        Position = UDim2New(0, 12, 0, 0),
                         Text = DropdownName,
                     })
                     ApplyFont(DropdownLabel, BodySize, Theme.Text)
@@ -1570,14 +1582,14 @@ Library.Window = function(Self, Data)
                             task.delay(0.18, function()
                                 if Open then
                                     Dropdown.AutomaticSize = Enum.AutomaticSize.None
-                                    Dropdown.Size = UDim2New(1, 0, 0, 32 + Height + 4)
+                                    Dropdown.Size = UDim2New(1, 0, 0, 36 + Height + 4)
                                 end
                             end)
                         else
                             Dropdown.AutomaticSize = Enum.AutomaticSize.None
                             Tween(ListFrame, { Size = UDim2New(1, 0, 0, 0) }, 0.15)
                             Tween(Chevron, { Rotation = 0 }, 0.15)
-                            Tween(Dropdown, { Size = UDim2New(1, 0, 0, 32) }, 0.15)
+                            Tween(Dropdown, { Size = UDim2New(1, 0, 0, 36) }, 0.15)
                             task.delay(0.16, function()
                                 ListFrame.Visible = false
                             end)
@@ -1849,10 +1861,10 @@ Library.Window = function(Self, Data)
                         Name = "KeybindRow",
                         BackgroundColor3 = Theme.Element,
                         BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, 32),
+                        Size = UDim2New(1, 0, 0, 36),
                         Parent = Content,
                     })
-                    MakeCorner(Holder, 4)
+                    MakeCorner(Holder, 6)
 
                     local RowLabel = Create("TextLabel", {
                         Name = "Label",
@@ -2231,10 +2243,10 @@ Library.Window = function(Self, Data)
                         Name = "ColorpickerRow",
                         BackgroundColor3 = Theme.Element,
                         BorderSizePixel = 0,
-                        Size = UDim2New(1, 0, 0, 32),
+                        Size = UDim2New(1, 0, 0, 36),
                         Parent = Content,
                     })
-                    MakeCorner(Holder, 4)
+                    MakeCorner(Holder, 6)
 
                     local RowLabel = Create("TextLabel", {
                         Name = "Label",
@@ -2277,7 +2289,7 @@ Library.Window = function(Self, Data)
                         Size = UDim2New(1, 0, 0, 28 + Size * 24),
                         Parent = Content,
                     })
-                    MakeCorner(Listbox, 4)
+                    MakeCorner(Listbox, 6)
                     MakePadding(Listbox, 8)
 
                     local ListboxLabel = Create("TextLabel", {
