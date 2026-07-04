@@ -1,52 +1,29 @@
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local Stats = game:GetService("Stats")
+local Services = setmetatable({}, {
+    __index = function(Self, Key)
+        return game:GetService(Key)
+    end,
+})
 
-local ResolveParent = function()
-    if gethui then
-        return gethui()
-    end
-    local Success, Result = pcall(function()
-        return game:GetService("CoreGui")
-    end)
-    if Success and Result then
-        return Result
-    end
-    return Players.LocalPlayer:WaitForChild("PlayerGui")
-end
-
-local LocalPlayer = Players.LocalPlayer
+local LocalPlayer = Services.Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
-local GuiParent = ResolveParent()
+local GuiParent = gethui and gethui() or Services.CoreGui
 
 local FromRGB = Color3.fromRGB
-local FromHSV = Color3.fromHSV
 local FromHex = Color3.fromHex
 local UDim2New = UDim2.new
 local UDimNew = UDim.new
 local Vector2New = Vector2.new
 local MathClamp = math.clamp
 local MathFloor = math.floor
-local MathRound = math.round
-local MathAbs = math.abs
 local StringFormat = string.format
 local StringSub = string.sub
-local StringLower = string.lower
 local StringUpper = string.upper
 local StringFind = string.find
 local StringGSub = string.gsub
 local TableInsert = table.insert
 local TableFind = table.find
 local TableRemove = table.remove
-local TableConcat = table.concat
 
-local RobotoMono = Enum.Font.RobotoMono
-local StrokeColor = Color3.new(0, 0, 0)
-local StrokeWidth = 1
 local BodySize = 13
 local TitleSize = 14
 local SmallSize = 11
@@ -61,7 +38,6 @@ local Theme = {
     ElementHover = FromRGB(30, 32, 42),
     ElementActive = FromRGB(36, 38, 50),
     Border = FromRGB(36, 38, 48),
-    BorderAccent = FromRGB(54, 56, 70),
     Text = FromRGB(228, 230, 236),
     Subtext = FromRGB(140, 144, 158),
     Faded = FromRGB(90, 94, 108),
@@ -69,9 +45,7 @@ local Theme = {
     AccentBright = FromRGB(125, 235, 255),
     AccentDim = FromRGB(14, 116, 144),
     AccentText = FromRGB(8, 10, 14),
-    Success = FromRGB(52, 211, 153),
     Danger = FromRGB(239, 68, 68),
-    Warning = FromRGB(251, 191, 36),
     ToggleOff = FromRGB(46, 48, 60),
     SliderTrack = FromRGB(36, 38, 48),
 }
@@ -81,9 +55,6 @@ local Library = {
     Connections = {},
     Instances = {},
     Theme = Theme,
-    Font = RobotoMono,
-    StrokeColor = StrokeColor,
-    StrokeWidth = StrokeWidth,
     Folders = {
         Directory = "ModernUI",
         Configs = "ModernUI/Configs",
@@ -122,12 +93,12 @@ end
 
 local ApplyFont = function(Object, Size, Color)
     Object.FontFace = Font.fromName("RobotoMono")
-    Object.TextStrokeColor3 = StrokeColor
-    Object.TextStrokeWidth = StrokeWidth
     Object.TextColor3 = Color or Theme.Text
     Object.TextSize = Size or BodySize
     Object.TextXAlignment = Enum.TextXAlignment.Left
     Object.TextYAlignment = Enum.TextYAlignment.Center
+    Object.TextStrokeColor3 = Color3.new(0, 0, 0)
+    Object.TextStrokeTransparency = 0
     return Object
 end
 
@@ -143,7 +114,7 @@ local Tween = function(Object, Props, Time, Style, Direction)
         Style or Enum.EasingStyle.Quad,
         Direction or Enum.EasingDirection.Out
     )
-    local Anim = TweenService:Create(Object, Info, Props)
+    local Anim = Services.TweenService:Create(Object, Info, Props)
     Anim:Play()
     return Anim
 end
@@ -289,7 +260,7 @@ local DragFrame = function(Frame, Handle)
             StartPosGui = Frame.Position
         end
     end)
-    Connect(UserInputService.InputChanged, function(Input)
+    Connect(Services.UserInputService.InputChanged, function(Input)
         if Dragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
             local Delta = Input.Position - StartPos
             Frame.Position = UDim2New(
@@ -298,7 +269,7 @@ local DragFrame = function(Frame, Handle)
             )
         end
     end)
-    Connect(UserInputService.InputEnded, function(Input)
+    Connect(Services.UserInputService.InputEnded, function(Input)
         if Input.UserInputType == Enum.UserInputType.MouseButton1 then
             Dragging = false
         end
@@ -1218,7 +1189,7 @@ Library.Window = function(Self, Data)
                             Dragging = false
                         end
                     end)
-                    Connect(UserInputService.InputChanged, function(Input)
+                    Connect(Services.UserInputService.InputChanged, function(Input)
                         if Dragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
                             SlideFromMouse()
                         end
@@ -1762,7 +1733,7 @@ Library.Window = function(Self, Data)
                         SetListening(not Listening)
                     end)
 
-                    Connect(UserInputService.InputBegan, function(Input, Processed)
+                    Connect(Services.UserInputService.InputBegan, function(Input, Processed)
                         if Listening then
                             if Input.UserInputType == Enum.UserInputType.Keyboard then
                                 UpdateKey(Input.KeyCode)
@@ -1810,7 +1781,7 @@ Library.Window = function(Self, Data)
                         end
                     end)
 
-                    Connect(UserInputService.InputEnded, function(Input, Processed)
+                    Connect(Services.UserInputService.InputEnded, function(Input, Processed)
                         if Processed then return end
                         if CurrentMode ~= "Hold" then return end
                         if Input.UserInputType == Enum.UserInputType.Keyboard and Input.KeyCode == State then
@@ -2097,7 +2068,7 @@ Library.Window = function(Self, Data)
                             PaletteDragging = false
                         end
                     end)
-                    Connect(UserInputService.InputChanged, function(Input)
+                    Connect(Services.UserInputService.InputChanged, function(Input)
                         if PaletteDragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
                             local Rel = UserInputService:GetMouseLocation() - Palette.AbsolutePosition
                             Sat = MathClamp(Rel.X / Palette.AbsoluteSize.X, 0, 1)
@@ -2120,7 +2091,7 @@ Library.Window = function(Self, Data)
                             HueDragging = false
                         end
                     end)
-                    Connect(UserInputService.InputChanged, function(Input)
+                    Connect(Services.UserInputService.InputChanged, function(Input)
                         if HueDragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
                             local Rel = UserInputService:GetMouseLocation() - HueBar.AbsolutePosition
                             Hue = MathClamp(Rel.X / HueBar.AbsoluteSize.X, 0, 1)
@@ -2142,7 +2113,7 @@ Library.Window = function(Self, Data)
                             AlphaDragging = false
                         end
                     end)
-                    Connect(UserInputService.InputChanged, function(Input)
+                    Connect(Services.UserInputService.InputChanged, function(Input)
                         if AlphaDragging and Input.UserInputType == Enum.UserInputType.MouseMovement then
                             local Rel = UserInputService:GetMouseLocation() - AlphaBar.AbsolutePosition
                             CurrentAlpha = MathClamp(1 - (Rel.X / AlphaBar.AbsoluteSize.X), 0, 1)
@@ -2192,7 +2163,7 @@ Library.Window = function(Self, Data)
                         TogglePicker()
                     end)
 
-                    Connect(UserInputService.InputBegan, function(Input)
+                    Connect(Services.UserInputService.InputBegan, function(Input)
                         if PickerOpen and Input.UserInputType == Enum.UserInputType.MouseButton1 then
                             local MousePos = UserInputService:GetMouseLocation()
                             local PickerPos = Picker.AbsolutePosition
@@ -2503,7 +2474,7 @@ Library.Window = function(Self, Data)
         end
     end
 
-    Connect(UserInputService.InputChanged, function(Input, Processed)
+    Connect(Services.UserInputService.InputChanged, function(Input, Processed)
         if Processed then return end
         if Input.UserInputType == Enum.UserInputType.MouseMovement then
             local Pos = UserInputService:GetMouseLocation()
@@ -2662,8 +2633,8 @@ Library.Watermark = function(Self, Data)
     StatsLabel.Parent = Mark
 
     local RenderConnect
-    RenderConnect = RunService.RenderStepped:Connect(function()
-        local Fps = MathFloor(1 / RunService.RenderStepped:Wait())
+    RenderConnect = Services.RunService.RenderStepped:Connect(function()
+        local Fps = MathFloor(1 / Services.RunService.RenderStepped:Wait())
         local Ping = 0
         pcall(function()
             Ping = MathFloor(LocalPlayer:GetNetworkPing() * 1000)
@@ -2746,7 +2717,7 @@ Library.KeybindList = function(Self)
     end
 
     local RenderConnect
-    RenderConnect = RunService.Heartbeat:Connect(function()
+    RenderConnect = Services.RunService.Heartbeat:Connect(function()
         Refresh()
     end)
     TableInsert(Library.Connections, RenderConnect)
@@ -2816,7 +2787,7 @@ Library.ConfigManager = function(Self)
             return false
         end
         local Content = readfile(Path)
-        local Success, Data = pcall(HttpService.JSONDecode, HttpService, Content)
+        local Success, Data = pcall(Services.HttpService.JSONDecode, Services.HttpService, Content)
         if not Success then
             return false
         end
