@@ -1,287 +1,177 @@
---!nocheck
+-- kimikahax
 --[[
-this is a remake of thugsense by samet
+    Remake based on thugsense (by samet) + vaderhaxx patterns
 
-######## DOCUMENTATION ########
+    Assign different flags to each element to prevent from configs overriding eachother
+    Example script is at the bottom
 
--- Setup
+    Documentation:
+    function Library:Window(Data: table
+        Name/name: string,
+        Size/size: UDim2
+    )
 
-function Library:Window(Data: table
-    Name/name: string,
-    Size/size: UDim2,
-    FadeSpeed/fadespeed: number
-)
+    function Window:Page(Data: table
+        Name/name: string,
+        Columns/columns: number,
+        SubTabs/subtabs: boolean
+    )
 
-function Library:Watermark(Name: string)
-function Library:Notification(Text: string, Duration: number, Color: Color3, Icon: table?)
-function Library:KeybindList()
-function Library:AddTooltip(Element: Instance, Text: string)
+    function Page:SubPage(Data: table
+        Icon/icon: string,
+        Columns/columns: number
+    )
 
-function Library:Settings(Window: table)
-function Library:Playerlist(Window: table)
-function Library:MusicPlayer()
-function Library:ESPPreview()
-function Library:InstanceTree()
+    function Page:Section(Data: table
+        Name/name: string,
+        Side/side: number,
+        Collapsible/collapsible: boolean,
+        Collapsed/collapsed: boolean
+    )
 
-function Library:RiskyPopup(Data: table
-    Window/window: table,
-    Parent/parent: table,
-    Text/text: string,
-    ConfirmText/confirmtext: string,
-    CancelText/canceltext: string,
-    WaitTime/waittime: number,
-    OnConfirm/onconfirm: function,
-    OnCancel/oncancel: function
-)
+    function Page:MultiSection(Data: table
+        Sections/sections: table,
+        Side/side: number
+    )
 
-function Library:Unload()
+    function Page:ScrollableSection(Data: table
+        Name/name: string,
+        Side/side: number,
+        Size/size: number
+    )
 
--- Config
-function Library:GetConfig() -> string
-function Library:LoadConfig(Config: string)
-function Library:SaveConfig(Config: string)
-function Library:DeleteConfig(Config: string)
-function Library:RefreshConfigsList(Element: table)
+    function Section:Divider()
 
--- Theme
-function Library:ChangeTheme(Theme: string, Color: Color3)
-function Library:AddToTheme(Item: Instance, Properties: table)
-function Library:ChangeItemTheme(Item: Instance, Properties: table)
+    function Section:Label(Data: table
+        Name/name: string,
+        Alignment/alignment: string
+    )
 
--- Window / Page hierarchy
-function Window:Page(Data: table
-    Name/name: string,
-    Columns/columns: number,
-    Subtabs/subtabs: boolean
-)
+    function Section:Toggle(Data: table
+        Name/name: string,
+        Default/default: boolean,
+        Flag/flag: string,
+        Callback/callback: function,
+        Risky/risky: boolean,
+        RiskyText/riskytext: string
+    )
 
-function Page:SubPage(Data: table
-    Icon/icon: string,
-    Columns/columns: number
-)
+    function Section:Button(Data: table
+        Name/name: string,
+        Callback/callback: function,
+        Risky/risky: boolean,
+        RiskyText/riskytext: string
+    )
 
-function Page:Section(Data: table
-    Name/name: string,
-    Side/side: number,
-    Collapsible/collapsible: boolean,
-    Collapsed/collapsed: boolean
-)
+    function Section:Slider(Data: table
+        Name/name: string,
+        Min/min: number,
+        Max/max: number,
+        Decimals/decimals: number,
+        Default/default: number,
+        Suffix/suffix: string,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Page:MultiSection(Data: table
-    Sections/sections: table,
-    Side/side: number
-) -> Section, Section, ...
+    function Section:Textbox(Data: table
+        Name/name: string,
+        Default/default: string,
+        Placeholder/placeholder: string,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Page:ScrollableSection(Data: table
-    Name/name: string,
-    Side/side: number,
-    Size/size: number
-)
+    function Section:Dropdown(Data: table
+        Name/name: string,
+        Items/items: table,
+        Default/default: string,
+        Flag/flag: string,
+        Multi/multi: boolean,
+        Callback/callback: function
+    )
 
--- Section elements
-function Section:Divider()
-function Section:Label(Data: table
-    Name/name: string,
-    Alignment/alignment: string
-)
+    function Section:Listbox(Data: table
+        Size/size: number,
+        Items/items: table,
+        Default/default: string,
+        Multi/multi: boolean,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Section:Toggle(Data: table
-    Name/name: string,
-    Default/default: boolean,
-    Flag/flag: string,
-    Callback/callback: function,
-    Risky/risky: boolean,
-    RiskyText/riskytext: string,
-    Tooltip/tooltip: string
-)
+    function Label:Keybind(Data: table
+        Name/name: string,
+        Mode/mode: string,
+        Default/default: EnumItem,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Section:Button(Data: table
-    Name/name: string,
-    Callback/callback: function,
-    Risky/risky: boolean,
-    RiskyText/riskytext: string,
-    Tooltip/tooltip: string
-)
+    function Label:Colorpicker(Data: table
+        Name/name: string,
+        Default/default: Color3,
+        Alpha/alpha: boolean,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Section:Slider(Data: table
-    Name/name: string,
-    Min/min: number,
-    Max/max: number,
-    Decimals/decimals: number,
-    Default/default: number,
-    Suffix/suffix: string,
-    Flag/flag: string,
-    Callback/callback: function,
-    Compact/compact: boolean
-)
+    function Toggle:Colorpicker(Data: table
+        Name/name: string,
+        Default/default: Color3,
+        Alpha/alpha: boolean,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Section:Textbox(Data: table
-    Name/name: string,
-    Default/default: string,
-    Placeholder/placeholder: string,
-    Flag/flag: string,
-    Callback/callback: function
-)
+    function Toggle:Keybind(Data: table
+        Name/name: string,
+        Mode/mode: string,
+        Default/default: EnumItem,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Section:Dropdown(Data: table
-    Name/name: string,
-    Items/items: table,
-    Default/default: string or table,
-    Flag/flag: string,
-    Multi/multi: boolean,
-    Callback/callback: function,
-    Tooltip/tooltip: string
-)
+    function Sections:Textbox(Data: table
+        Name/name: string,
+        Default/default: string,
+        Placeholder/placeholder: string,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Section:Listbox(Data: table
-    Size/size: number,
-    Items/items: table,
-    Default/default: string or table,
-    Multi/multi: boolean,
-    Flag/flag: string,
-    Callback/callback: function
-)
+    function Library:Watermark(Name: string)
+    function Library:Notification(Text: string, Duration: number, Color: Color3, Icon: table)
+    function Library:KeybindList()
+    function Library:Settings(Window: table)
+    function Library:Playerlist(Window: table)
+    function Library:InstanceTree()
+    function Library:RiskyPopup(Data: table
+        Window/window: table,
+        Parent/parent: table,
+        Text/text: string,
+        ConfirmText/confirmtext: string,
+        CancelText/canceltext: string,
+        WaitTime/waittime: number,
+        OnConfirm/onconfirm: function,
+        OnCancel/oncancel: function
+    )
 
-function Section:Colorpicker(Data: table
-    Name/name: string,
-    Default/default: Color3,
-    Alpha/alpha: boolean,
-    Flag/flag: string,
-    Callback/callback: function
-)
+    function Section:BezierMapper(Data: table
+        Name/name: string,
+        Default/default: table,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 
-function Section:BezierMapper(Data: table
-    Name/name: string,
-    Default/default: table,
-    Flag/flag: string,
-    Callback/callback: function
-)
-
-function Section:BodyPartBox(Data: table
-    Name/name: string,
-    RigType/rigtype: string,
-    Multiple/multiple: boolean,
-    Default/default: table,
-    Flag/flag: string,
-    Callback/callback: function,
-    Tooltips/tooltips: table,
-    Tooltip/tooltip: string
-)
-
--- Inline extensions (attach to Label / Toggle right side)
-function Label:Keybind(Data: table
-    Name/name: string,
-    Mode/mode: string,
-    Default/default: EnumItem,
-    Flag/flag: string,
-    Callback/callback: function
-)
-
-function Label:Colorpicker(Data: table
-    Name/name: string,
-    Default/default: Color3,
-    Alpha/alpha: boolean,
-    Flag/flag: string,
-    Callback/callback: function
-)
-
-function Toggle:Colorpicker(Data: table
-    Name/name: string,
-    Default/default: Color3,
-    Alpha/alpha: boolean,
-    Flag/flag: string,
-    Callback/callback: function
-)
-
-function Toggle:Keybind(Data: table
-    Name/name: string,
-    Mode/mode: string,
-    Default/default: EnumItem,
-    Flag/flag: string,
-    Callback/callback: function
-) -> Keybind, Extension
-
-######## METHODS ########
-
-Window:SetOpen(Bool: boolean)
-Page:Turn(Bool: boolean)
-Section:SetCollapsed(Bool: boolean)
-Section:ToggleCollapse()
-
-Divider:SetVisibility(Bool: boolean)
-
-Label:Colorpicker(Data: table)
-Label:Keybind(Data: table)
-
-Toggle:Get() -> boolean
-Toggle:Set(Bool: boolean?)
-Toggle:SetVisiblity(Bool: boolean)   -- typo in source, missing second 'i'
-Toggle:Colorpicker(Data: table)
-Toggle:Keybind(Data: table) -> Keybind, Extension
-
-Button:Press()
-Button:SetVisiblity(Bool: boolean)   -- same typo
-
-Slider:Get() -> number
-Slider:Set(Value: number)
-Slider:SetVisibility(Bool: boolean)
-
-Textbox:Get() -> string
-Textbox:Set(Value: string)
-Textbox:SetVisibility(Bool: boolean)
-
-Dropdown:Get()
-Dropdown:Set(Option: string or table)
-Dropdown:SetVisibility(Bool: boolean)
-Dropdown:SetOpen(Bool: boolean)
-Dropdown:Add(Option: string)
-Dropdown:Remove(Option: string)
-Dropdown:Refresh(List: table)
-
-Listbox:Get()
-Listbox:Set(Option: string or table)
-Listbox:SetVisibility(Bool: boolean)
-Listbox:Add(Option: string)
-Listbox:Remove(Option: string)
-Listbox:Refresh(List: table)
-
-Colorpicker:Set(Color: Color3 or string or table, Alpha: number?)
-Colorpicker:Get()
-Colorpicker:SetOpen(Bool: boolean)
-Colorpicker:SetVisibility(Bool: boolean)
-
-BezierMapper:Get() -> table
-BezierMapper:Set(Points: table)
-BezierMapper:Evaluate(t: number) -> number
-BezierMapper:AddPoint(X: number, Y: number)
-BezierMapper:RemovePoint(Index: number)
-BezierMapper:SetVisibility(Bool: boolean)
-
-BodyPartBox:Get() -> table
-BodyPartBox:Set(Parts: string or table)
-BodyPartBox:TogglePart(PartName: string)
-BodyPartBox:Clear()
-BodyPartBox:SetVisibility(Bool: boolean)
-
-Watermark:SetVisibility(Bool: boolean)
-KeybindList:SetVisibility(Bool: boolean)
-KeybindList:Add(Mode: string, Name: string, Key: string) -> NewKey
-
-## EXTRAS:
-
-Library.Theme       -- table of named Color3 (Background, Inline, Page Background, Border,
-                        Outline, Accent, Element, Hovered Element, Text, Text Border, RiskyText)
-Library.Flags       -- table of current element values keyed by Flag
-Library.SetFlags    -- table of setter functions keyed by Flag
-Library.Font        -- FontFace used by every label
-Library.Tween       -- { Time = 0.3, Style = Exponential, Direction = Out }
-Library.Folders     -- { Directory = "opioids", Configs = "opioids/Configs", Assets = "opioids/Assets" }
-Library.RainbowSpeed -- 0.002 by default
-
-local v = Library.Flags["MyFlag"]
-Library.SetFlags["MyFlag"](newValue)
-
-Library:ChangeTheme("Accent", Color3.fromRGB(255, 0, 0))
+    function Section:BodyPartBox(Data: table
+        Name/name: string,
+        RigType/rigtype: string,
+        Multiple/multiple: boolean,
+        Default/default: table,
+        Flag/flag: string,
+        Callback/callback: function
+    )
 ]]
 
 local LoadingTick = os.clock()
@@ -1721,8 +1611,13 @@ local Library do
             
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             })             
         end
 
@@ -1801,8 +1696,13 @@ local Library do
 
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             })
             
             Items["Icon"] = Instances:Create("ImageLabel", {
@@ -1891,20 +1791,21 @@ local Library do
         self.KeyList = KeybindList
 
         local Items = { } do
+            -- Outer KeybindList frame with Accent stroke
             Items["KeybindList"] = Instances:Create("Frame", {
                 Parent = Library.Holder.Instance,
                 BorderColor3 = FromRGB(10, 10, 10),
                 AnchorPoint = Vector2New(0, 0.5),
                 Name = "\0",
                 Position = UDim2New(0, 15, 0.5, 0),
-                Size = UDim2New(0, 0, 0, 18),
-                BorderSizePixel = 2,
-                AutomaticSize = Enum.AutomaticSize.XY,
-                BackgroundColor3 = FromRGB(15, 15, 20)
-            })  Items["KeybindList"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
+                Size = UDim2New(0, 180, 0, 0),
+                BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BackgroundColor3 = FromRGB(26, 26, 32)
+            })  Items["KeybindList"]:AddToTheme({BackgroundColor3 = "Inline"})
 
             Items["KeybindList"]:MakeDraggable()
-            
+
             Instances:Create("UIStroke", {
                 Parent = Items["KeybindList"].Instance,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
@@ -1912,33 +1813,70 @@ local Library do
                 Name = "\0",
                 Color = FromRGB(235, 157, 255)
             }):AddToTheme({Color = "Accent"})
-            
-            Items["AccentLine"] = Instances:Create("Frame", {
+
+            -- UIPadding creates the margin on ALL sides (including bottom) so the
+            -- Inline's UIStroke doesn't overflow the KeybindList frame
+            Instances:Create("UIPadding", {
+                Parent = Items["KeybindList"].Instance,
+                PaddingTop = UDimNew(0, 6),
+                PaddingBottom = UDimNew(0, 6),
+                PaddingLeft = UDimNew(0, 6),
+                PaddingRight = UDimNew(0, 6)
+            })
+
+            -- Inline sub-frame (inner frame, sits inside KeybindList)
+            -- Use AutomaticSize=XY so it sizes to content (not Scale=1 which causes
+            -- circular sizing with the parent's AutomaticSize=X, making the panel too wide)
+            Items["Inline"] = Instances:Create("Frame", {
                 Parent = Items["KeybindList"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, -5, 0, -5),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(1, 10, 0, 2),
+                Position = UDim2New(0, 0, 0, 0),
+                Size = UDim2New(1, 0, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BorderColor3 = FromRGB(27, 27, 32),
+                BorderSizePixel = 2,
+                BackgroundColor3 = FromRGB(20, 20, 25)
+            })  Items["Inline"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Outline"})
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Inline"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                Color = FromRGB(12, 12, 16),
+                Name = "\0"
+            }):AddToTheme({Color = "Border"})
+
+            -- Accent line on top of the Inline (like the main window)
+            Items["AccentLine"] = Instances:Create("Frame", {
+                Parent = Items["Inline"].Instance,
+                Name = "\0",
+                Position = UDim2New(0, 0, 0, 0),
+                Size = UDim2New(1, 0, 0, 2),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(235, 157, 255)
             })  Items["AccentLine"]:AddToTheme({BackgroundColor3 = "Accent"})
-            
+
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
-            }) 
-            
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
+            })
+
             Instances:Create("UIPadding", {
-                Parent = Items["KeybindList"].Instance,
+                Parent = Items["Inline"].Instance,
                 PaddingTop = UDimNew(0, 5),
                 PaddingBottom = UDimNew(0, 5),
                 PaddingRight = UDimNew(0, 5),
                 PaddingLeft = UDimNew(0, 5)
-            }) 
-            
+            })
+
             Items["Title"] = Instances:Create("TextLabel", {
-                Parent = Items["KeybindList"].Instance,
+                Parent = Items["Inline"].Instance,
                 FontFace = Library.Font,
                 TextColor3 = FromRGB(215, 215, 215),
                 BorderColor3 = FromRGB(0, 0, 0),
@@ -1952,15 +1890,15 @@ local Library do
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
-            
+
             Instances:Create("UIStroke", {
                 Parent = Items["Title"].Instance,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"})
-            
+
             Items["Content"] = Instances:Create("Frame", {
-                Parent = Items["KeybindList"].Instance,
+                Parent = Items["Inline"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
                 Position = UDim2New(0, 5, 0, 19),
@@ -1968,8 +1906,8 @@ local Library do
                 BorderSizePixel = 0,
                 AutomaticSize = Enum.AutomaticSize.XY,
                 BackgroundColor3 = FromRGB(255, 255, 255)
-            }) 
-            
+            })
+
             Instances:Create("UIListLayout", {
                 Parent = Items["Content"].Instance,
                 Padding = UDimNew(0, 4),
@@ -2037,7 +1975,7 @@ local Library do
             Text = Data.Text or "Are you sure?",
             ConfirmText = Data.ConfirmText or "Confirm",
             CancelText = Data.CancelText or "Cancel",
-            WaitTime = Data.WaitTime or 1.3,
+            WaitTime = Data.WaitTime or 1.2,
             OnConfirm = Data.OnConfirm or function() end,
             OnCancel = Data.OnCancel or function() end
         }
@@ -3540,8 +3478,13 @@ local Library do
 
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65)) }
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             })
 
             Items["Title"] = Instances:Create("TextLabel", {
@@ -4666,8 +4609,13 @@ local Library do
 
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65)) }
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             })
 
             Items["Title"] = Instances:Create("TextButton", {
@@ -5455,13 +5403,10 @@ local Library do
         task.spawn(function()
             local AnimationCheckTimer = 0
             while true do
-                -- Optimization: only run the per-frame ESP redraw when ESP is actually
-                -- enabled. The dummy preview animation still runs (DrawDummyESP handles
-                -- both the preview dummy and real-player overlays; the dummy is cheap,
-                -- but the player iteration is not).
-                if ESPPreview.Config.Enabled then
-                    pcall(DrawDummyESP)
-                end
+                -- Dummy preview ALWAYS draws when the ESPPreview window is visible.
+                -- The dummy is the preview — it should show ESP drawings regardless of
+                -- whether real-player ESP is enabled.
+                pcall(DrawDummyESP)
 
                 AnimationCheckTimer = AnimationCheckTimer + 0.03
                 if AnimationCheckTimer >= 3 then
@@ -5477,6 +5422,7 @@ local Library do
                     end)
                 end
 
+                -- Real-player ESP only draws when Config.Enabled is true
                 if ESPPreview.Config.Enabled then
                     for _, player in Players:GetPlayers() do
                         if player ~= LocalPlayer then
@@ -7697,7 +7643,7 @@ local Library do
                 Position = UDim2New(0, Data.Parent.Instance.AbsolutePosition.X, 0, Data.Parent.Instance.AbsolutePosition.Y + 15),
                 BorderColor3 = FromRGB(10, 10, 10),
                 Visible = false,
-                Size = UDim2New(0, 210, 0, 230),
+                Size = UDim2New(0, 210, 0, 290),
                 BorderSizePixel = 2,
                 BackgroundColor3 = FromRGB(15, 15, 20)
             })  Items["ColorpickerWindow"]:AddToTheme({BackgroundColor3 = "Background"})
@@ -7747,8 +7693,13 @@ local Library do
             
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             }) 
             
             Instances:Create("UIPadding", {
@@ -7768,7 +7719,7 @@ local Library do
                 AutoButtonColor = false,
                 Name = "\0",
                 Position = UDim2New(0, 0, 0, 15),
-                Size = UDim2New(1, -26, 1, -62),
+                Size = UDim2New(1, -26, 1, -95),
                 BorderSizePixel = 0,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(255, 0, 0)
@@ -7829,7 +7780,7 @@ local Library do
                 Image = Library:GetImage("Hue"),
                 Name = "\0",
                 Position = UDim2New(1, 0, 0, 15),
-                Size = UDim2New(0, 18, 1, -37),
+                Size = UDim2New(0, 18, 1, -95),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
@@ -7868,7 +7819,7 @@ local Library do
                 AutoButtonColor = false,
                 AnchorPoint = Vector2New(0, 1),
                 Name = "\0",
-                Position = UDim2New(0, 0, 1, -24),
+                Position = UDim2New(0, 0, 1, -62),
                 Size = UDim2New(1, -26, 0, 18),
                 BorderSizePixel = 0,
                 TextSize = 14,
@@ -7931,8 +7882,8 @@ local Library do
                 AutoButtonColor = false,
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 1),
-                Position = UDim2New(0, 0, 1, -2),
-                Size = UDim2New(0, 14, 0, 14),
+                Position = UDim2New(0, 0, 1, -42),
+                Size = UDim2New(0, 16, 0, 16),
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 TextSize = 12,
@@ -7944,7 +7895,7 @@ local Library do
                 Parent = Items["RainbowToggle"].Instance,
                 Name = "\0",
                 BorderColor3 = FromRGB(10, 10, 10),
-                Size = UDim2New(0, 10, 0, 10),
+                Size = UDim2New(0, 12, 0, 12),
                 AnchorPoint = Vector2New(0, 0.5),
                 Position = UDim2New(0, 2, 0.5, 0),
                 BorderSizePixel = 2,
@@ -7975,7 +7926,7 @@ local Library do
                 Text = "Rainbow",
                 Name = "\0",
                 AnchorPoint = Vector2New(0, 1),
-                Position = UDim2New(0, 16, 1, -2),
+                Position = UDim2New(0, 20, 1, -42),
                 Size = UDim2New(0, 60, 0, 14),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
@@ -7992,6 +7943,98 @@ local Library do
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0"
             }):AddToTheme({ Color = "Text Border" })
+
+            -- RGB display label (shows current RGB values)
+            Items["RGBDisplay"] = Instances:Create("TextLabel", {
+                Parent = Items["ColorpickerWindow"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = "RGB: 255, 255, 255",
+                Name = "\0",
+                AnchorPoint = Vector2New(0, 1),
+                Position = UDim2New(0, 0, 1, -4),
+                Size = UDim2New(0, 120, 0, 14),
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Center,
+                BorderSizePixel = 0,
+                TextSize = 11,
+                ZIndex = 3,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+            Items["RGBDisplay"]:AddToTheme({ TextColor3 = "Text" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["RGBDisplay"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0"
+            }):AddToTheme({ Color = "Text Border" })
+
+            -- Hex/RGB input TextBox
+            Items["HexInput"] = Instances:Create("TextBox", {
+                Parent = Items["ColorpickerWindow"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                PlaceholderText = "#RRGGBB or R,G,B",
+                Text = "",
+                Name = "\0",
+                AnchorPoint = Vector2New(0, 1),
+                Position = UDim2New(0, 0, 1, -22),
+                Size = UDim2New(0, 120, 0, 16),
+                BackgroundColor3 = FromRGB(20, 20, 25),
+                BorderColor3 = FromRGB(10, 10, 10),
+                BorderSizePixel = 2,
+                TextSize = 11,
+                ClearTextOnFocus = false,
+                ZIndex = 3
+            })
+            Items["HexInput"]:AddToTheme({ BackgroundColor3 = "Background", BorderColor3 = "Border", TextColor3 = "Text" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["HexInput"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0",
+                Color = FromRGB(27, 27, 32)
+            }):AddToTheme({ Color = "Outline" })
+
+            -- Parse hex or RGB input on FocusLost
+            Items["HexInput"]:Connect("FocusLost", function(EnterPressed)
+                local Text = Items["HexInput"].Instance.Text
+                if not Text or Text == "" then return end
+
+                Text = Text:gsub("%s", "")
+
+                local NewColor = nil
+                -- Try hex: #RRGGBB or RRGGBB
+                if Text:match("^#?[%x]+$") then
+                    local Hex = Text:gsub("^#", "")
+                    if #Hex == 6 then
+                        local r = tonumber(Hex:sub(1, 2), 16)
+                        local g = tonumber(Hex:sub(3, 4), 16)
+                        local b = tonumber(Hex:sub(5, 6), 16)
+                        if r and g and b then
+                            NewColor = FromRGB(r, g, b)
+                        end
+                    end
+                end
+
+                -- Try RGB: R,G,B
+                if not NewColor then
+                    local r, g, b = Text:match("^(%d+),(%d+),(%d+)$")
+                    if r and g and b then
+                        r = math.clamp(tonumber(r), 0, 255)
+                        g = math.clamp(tonumber(g), 0, 255)
+                        b = math.clamp(tonumber(b), 0, 255)
+                        NewColor = FromRGB(r, g, b)
+                    end
+                end
+
+                if NewColor then
+                    Colorpicker:Set(NewColor, Colorpicker.Alpha)
+                end
+            end)
         end
 
         local SlidingPalette = false
@@ -8111,6 +8154,17 @@ local Library do
 
             Items["ColorpickerButton"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = self.Color})
             Items["Palette"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = FromHSV(self.Hue, 1, 1)})
+
+            -- Update RGB display + hex input
+            if Items["RGBDisplay"] then
+                local r = math.floor(self.Color.R * 255 + 0.5)
+                local g = math.floor(self.Color.G * 255 + 0.5)
+                local b = math.floor(self.Color.B * 255 + 0.5)
+                Items["RGBDisplay"].Instance.Text = string.format("RGB: %d, %d, %d", r, g, b)
+            end
+            if Items["HexInput"] and not Items["HexInput"].Instance:IsFocused() then
+                Items["HexInput"].Instance.Text = "#" .. self.HexValue
+            end
 
             if not IsFromAlpha then 
                 Items["Alpha"]:Tween(TweenInfo.new(0.17, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {BackgroundColor3 = self.Color})
@@ -9021,7 +9075,12 @@ local Library do
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
                 Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(100, 100, 100))}
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             })
 
             -- Tab text — indented 8px from the left to make room for the accent line
@@ -9492,8 +9551,13 @@ local Library do
 
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             })
 
             if Section.Collapsible then
@@ -9667,8 +9731,13 @@ local Library do
             
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             }) 
             
             Items["Sections"] = Instances:Create("Frame", {
@@ -9954,8 +10023,13 @@ local Library do
             
             Instances:Create("UIGradient", {
                 Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(65, 65, 65))}
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
             })
             
             Items["Text"] = Instances:Create("TextLabel", {
@@ -11343,8 +11417,8 @@ local Library do
             TextTransparency = 0.48,
             Text = Colorpicker.Name,
             Name = "\0",
-            Size = UDim2New(1, -25, 1, 0),
-            Position = UDim2New(0, 0, 0, 0),
+            Size = UDim2New(1, -43, 1, 0),
+            Position = UDim2New(0, 18, 0, 0),
             BackgroundTransparency = 1,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -12579,7 +12653,7 @@ local Library do
                 BorderColor3 = FromRGB(10, 10, 10),
                 Name = "\0",
                 Position = UDim2New(0, 0, 0, 16),
-                Size = UDim2New(1, 0, 0, 136),
+                Size = UDim2New(1, 0, 0, 178),
                 BorderSizePixel = 2
             })
             Items["RigFrame"]:AddToTheme({ BackgroundColor3 = "Background", BorderColor3 = "Border" })
@@ -12626,7 +12700,7 @@ local Library do
                 BackgroundTransparency = 1,
                 Name = "\0",
                 Position = UDim2New(0.5, 0, 0, 20),
-                Size = UDim2New(0, 100, 0, 106),
+                Size = UDim2New(0, 140, 0, 148),
                 AnchorPoint = Vector2New(0.5, 0),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(255, 255, 255),
@@ -12669,32 +12743,32 @@ local Library do
         end
 
         local R6Layout = {
-            Head = { Position = UDim2New(0.5, -8, 0, 2), Size = UDim2New(0, 16, 0, 20) },
-            Torso = { Position = UDim2New(0.5, -16, 0, 24), Size = UDim2New(0, 32, 0, 32) },
-            ["Left Arm"] = { Position = UDim2New(0.5, -31, 0, 24), Size = UDim2New(0, 12, 0, 32) },
-            ["Right Arm"] = { Position = UDim2New(0.5, 19, 0, 24), Size = UDim2New(0, 12, 0, 32) },
-            ["Left Leg"] = { Position = UDim2New(0.5, -16, 0, 58), Size = UDim2New(0, 14, 0, 36) },
-            ["Right Leg"] = { Position = UDim2New(0.5, 2, 0, 58), Size = UDim2New(0, 14, 0, 36) },
-            HumanoidRootPart = { Position = UDim2New(0.5, -8, 0, 32), Size = UDim2New(0, 16, 0, 16) }
+            Head = { Position = UDim2New(0.5, -11, 0, 3), Size = UDim2New(0, 22, 0, 28) },
+            Torso = { Position = UDim2New(0.5, -22, 0, 34), Size = UDim2New(0, 45, 0, 45) },
+            ["Left Arm"] = { Position = UDim2New(0.5, -43, 0, 34), Size = UDim2New(0, 17, 0, 45) },
+            ["Right Arm"] = { Position = UDim2New(0.5, 27, 0, 34), Size = UDim2New(0, 17, 0, 45) },
+            ["Left Leg"] = { Position = UDim2New(0.5, -22, 0, 81), Size = UDim2New(0, 20, 0, 50) },
+            ["Right Leg"] = { Position = UDim2New(0.5, 3, 0, 81), Size = UDim2New(0, 20, 0, 50) },
+            HumanoidRootPart = { Position = UDim2New(0.5, -11, 0, 45), Size = UDim2New(0, 22, 0, 22) }
         }
 
         local R15Layout = {
-            Head = { Position = UDim2New(0.5, -8, 0, 2), Size = UDim2New(0, 16, 0, 20) },
-            UpperTorso = { Position = UDim2New(0.5, -16, 0, 24), Size = UDim2New(0, 32, 0, 18) },
-            LowerTorso = { Position = UDim2New(0.5, -16, 0, 44), Size = UDim2New(0, 32, 0, 12) },
-            LeftUpperArm = { Position = UDim2New(0.5, -31, 0, 24), Size = UDim2New(0, 12, 0, 14) },
-            LeftLowerArm = { Position = UDim2New(0.5, -31, 0, 40), Size = UDim2New(0, 12, 0, 10) },
-            LeftHand = { Position = UDim2New(0.5, -31, 0, 51), Size = UDim2New(0, 12, 0, 5) },
-            RightUpperArm = { Position = UDim2New(0.5, 19, 0, 24), Size = UDim2New(0, 12, 0, 14) },
-            RightLowerArm = { Position = UDim2New(0.5, 19, 0, 40), Size = UDim2New(0, 12, 0, 10) },
-            RightHand = { Position = UDim2New(0.5, 19, 0, 51), Size = UDim2New(0, 12, 0, 5) },
-            LeftUpperLeg = { Position = UDim2New(0.5, -16, 0, 58), Size = UDim2New(0, 14, 0, 14) },
-            LeftLowerLeg = { Position = UDim2New(0.5, -16, 0, 74), Size = UDim2New(0, 14, 0, 13) },
-            LeftFoot = { Position = UDim2New(0.5, -16, 0, 89), Size = UDim2New(0, 14, 0, 5) },
-            RightUpperLeg = { Position = UDim2New(0.5, 2, 0, 58), Size = UDim2New(0, 14, 0, 14) },
-            RightLowerLeg = { Position = UDim2New(0.5, 2, 0, 74), Size = UDim2New(0, 14, 0, 13) },
-            RightFoot = { Position = UDim2New(0.5, 2, 0, 89), Size = UDim2New(0, 14, 0, 5) },
-            HumanoidRootPart = { Position = UDim2New(0.5, -8, 0, 32), Size = UDim2New(0, 16, 0, 16) }
+            Head = { Position = UDim2New(0.5, -11, 0, 3), Size = UDim2New(0, 22, 0, 28) },
+            UpperTorso = { Position = UDim2New(0.5, -22, 0, 34), Size = UDim2New(0, 45, 0, 25) },
+            LowerTorso = { Position = UDim2New(0.5, -22, 0, 62), Size = UDim2New(0, 45, 0, 17) },
+            LeftUpperArm = { Position = UDim2New(0.5, -43, 0, 34), Size = UDim2New(0, 17, 0, 20) },
+            LeftLowerArm = { Position = UDim2New(0.5, -43, 0, 56), Size = UDim2New(0, 17, 0, 14) },
+            LeftHand = { Position = UDim2New(0.5, -43, 0, 71), Size = UDim2New(0, 17, 0, 7) },
+            RightUpperArm = { Position = UDim2New(0.5, 27, 0, 34), Size = UDim2New(0, 17, 0, 20) },
+            RightLowerArm = { Position = UDim2New(0.5, 27, 0, 56), Size = UDim2New(0, 17, 0, 14) },
+            RightHand = { Position = UDim2New(0.5, 27, 0, 71), Size = UDim2New(0, 17, 0, 7) },
+            LeftUpperLeg = { Position = UDim2New(0.5, -22, 0, 81), Size = UDim2New(0, 20, 0, 20) },
+            LeftLowerLeg = { Position = UDim2New(0.5, -22, 0, 104), Size = UDim2New(0, 20, 0, 18) },
+            LeftFoot = { Position = UDim2New(0.5, -22, 0, 125), Size = UDim2New(0, 20, 0, 7) },
+            RightUpperLeg = { Position = UDim2New(0.5, 3, 0, 81), Size = UDim2New(0, 20, 0, 20) },
+            RightLowerLeg = { Position = UDim2New(0.5, 3, 0, 104), Size = UDim2New(0, 20, 0, 18) },
+            RightFoot = { Position = UDim2New(0.5, 3, 0, 125), Size = UDim2New(0, 20, 0, 7) },
+            HumanoidRootPart = { Position = UDim2New(0.5, -11, 0, 45), Size = UDim2New(0, 22, 0, 22) }
         }
 
         local Layout = BodyPartBox.RigType == "R15" and R15Layout or R6Layout
