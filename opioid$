@@ -1323,18 +1323,12 @@ local Library do
             return Tween
         end
 
-        -- Open animation: fade in only (no scale)
+        -- Open animation: fade in backdrop + popup frame only.
+        -- Children (text, buttons) stay visible from the start — we do NOT touch their
+        -- transparency because tweening BackgroundTransparency to 0 on TextLabels would
+        -- give them opaque backgrounds and obscure the text.
         local OpenTime = Library.Tween.Time
         Items["Popup"].Instance.BackgroundTransparency = 1
-        for _, child in Items["Popup"].Instance:GetDescendants() do
-            local props = Library:GetTransparencyPropertyFromItem(child)
-            if props then
-                local propList = type(props) == "table" and props or { props }
-                for _, prop in propList do
-                    child[prop] = 1
-                end
-            end
-        end
         task.defer(function()
             TweenService:Create(Items["Backdrop"].Instance, TweenInfo.new(OpenTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 BackgroundTransparency = 0.5
@@ -1342,18 +1336,6 @@ local Library do
             TweenService:Create(Items["Popup"].Instance, TweenInfo.new(OpenTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 BackgroundTransparency = 0
             }):Play()
-            for _, child in Items["Popup"].Instance:GetDescendants() do
-                local props = Library:GetTransparencyPropertyFromItem(child)
-                if props then
-                    local propList = type(props) == "table" and props or { props }
-                    for _, prop in propList do
-                        local target = 0
-                        TweenService:Create(child, TweenInfo.new(OpenTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                            [prop] = target
-                        }):Play()
-                    end
-                end
-            end
         end)
 
         -- Auto-focus the TextBox and select all text for easy editing
@@ -2055,7 +2037,7 @@ local Library do
             Text = Data.Text or "Are you sure?",
             ConfirmText = Data.ConfirmText or "Confirm",
             CancelText = Data.CancelText or "Cancel",
-            WaitTime = Data.WaitTime or 2,
+            WaitTime = Data.WaitTime or 1.3,
             OnConfirm = Data.OnConfirm or function() end,
             OnCancel = Data.OnCancel or function() end
         }
@@ -2292,18 +2274,12 @@ local Library do
             return Tween
         end
 
-        -- Open animation: fade in only (no scale)
+        -- Open animation: fade in backdrop + popup frame only.
+        -- Children (text, buttons) stay visible from the start — we do NOT touch their
+        -- transparency because tweening BackgroundTransparency to 0 on TextLabels would
+        -- give them opaque backgrounds and obscure the text.
         local OpenTime = Library.Tween.Time
         Items["Popup"].Instance.BackgroundTransparency = 1
-        for _, child in Items["Popup"].Instance:GetDescendants() do
-            local props = Library:GetTransparencyPropertyFromItem(child)
-            if props then
-                local propList = type(props) == "table" and props or { props }
-                for _, prop in propList do
-                    child[prop] = 1
-                end
-            end
-        end
         task.defer(function()
             TweenService:Create(Items["Backdrop"].Instance, TweenInfo.new(OpenTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 BackgroundTransparency = 0.5
@@ -2311,18 +2287,6 @@ local Library do
             TweenService:Create(Items["Popup"].Instance, TweenInfo.new(OpenTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 BackgroundTransparency = 0
             }):Play()
-            for _, child in Items["Popup"].Instance:GetDescendants() do
-                local props = Library:GetTransparencyPropertyFromItem(child)
-                if props then
-                    local propList = type(props) == "table" and props or { props }
-                    for _, prop in propList do
-                        local target = 0
-                        TweenService:Create(child, TweenInfo.new(OpenTime, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                            [prop] = target
-                        }):Play()
-                    end
-                end
-            end
         end)
 
         CountdownThread = Library:Thread(function()
