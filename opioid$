@@ -7628,11 +7628,11 @@ local Library do
             Side = 1
         })
 
-        AboutSection:Label({ Name = "kimikahax v1.0.0", Alignment = "Center" })
-        AboutSection:Label({ Name = "Based on thugsense + utopia", Alignment = "Center" })
+        AboutSection:Label({ Name = "$$ neuro.net $$", Alignment = "Center" })
+        AboutSection:Label({ Name = "This library is licensed as opioid$", Alignment = "Center" })
         AboutSection:Divider()
-        AboutSection:Label({ Name = "Press Z to toggle the menu.", Alignment = "Center" })
-        AboutSection:Label({ Name = "Made with Library framework.", Alignment = "Center" })
+        AboutSection:Label({ Name = "- unvhook (backend, frontend [library]", Alignment = "Center" })
+        AboutSection:Label({ Name = "- vince (backend)", Alignment = "Center" })
 
         AboutSection:Button({
             Name = "Unload Library",
@@ -7644,7 +7644,7 @@ local Library do
         AboutSection:Button({
             Name = "Copy Discord",
             Callback = function()
-                setclipboard("https://discord.gg/your-invite")
+                setclipboard("https://discord.gg/chudvision")
                 Library:Notification("Discord copied to clipboard", 3, Library.Theme.Accent)
             end
         })
