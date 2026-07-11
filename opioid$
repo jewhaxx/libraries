@@ -320,7 +320,7 @@ local Library do
         ["Ampersand"]         = "&",
         ["Quote"]             = "'",
         ["LeftParenthesis"]   = "(",
-        ["RightParenthesis"]  = " )",
+        ["RightParenthesis"]  = ")",
         ["Asterisk"]          = "*",
         ["Plus"]              = "+",
         ["Comma"]             = ",",
