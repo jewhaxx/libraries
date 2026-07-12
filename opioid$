@@ -1,4 +1,4 @@
--- opioid$ v1.3
+-- opioid$ v1.3.1
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -4303,7 +4303,7 @@ local Library do
         local UpdateLyrics = function()
             if State.Lyrics and #State.Lyrics > 0 then
                 local CurrentLyricIdx = 0
-                local AdjustedProgress = State.Progress - 100
+                local AdjustedProgress = State.Progress
                 for i, Line in State.Lyrics do
                     if Line.time <= AdjustedProgress then
                         CurrentLyricIdx = i
@@ -4332,9 +4332,13 @@ local Library do
                         CurrText = "♪"
                     end
 
-                    Items["LyricsPrev"].Instance.Text = PrevText
-                    Items["LyricsCurrent"].Instance.Text = CurrText
-                    Items["LyricsNext"].Instance.Text = NextText
+                    TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.15), { TextTransparency = 1 }):Play()
+                    task.delay(0.15, function()
+                        Items["LyricsPrev"].Instance.Text = PrevText
+                        Items["LyricsCurrent"].Instance.Text = CurrText
+                        Items["LyricsNext"].Instance.Text = NextText
+                        TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.15), { TextTransparency = 0 }):Play()
+                    end)
                 end
             end
         end
@@ -9030,32 +9034,41 @@ local Library do
         end
 
         local OriginalTransparencies = { }
+        local CachedFadeItems = { }
 
-        local FadeGroup = nil
-        pcall(function()
+        local StoreTransparencies = function()
+            OriginalTransparencies = { }
+            CachedFadeItems = { }
             local Frame = Items["MainFrame"].Instance
-            local Group = InstanceNew("CanvasGroup")
-            Group.Name = "\0"
-            Group.Size = UDim2New(1, 0, 1, 0)
-            Group.BackgroundTransparency = 1
-            Group.GroupTransparency = 0
-            Group.Parent = Frame
 
-            for _, Child in Frame:GetChildren() do
-                if Child ~= Group and not (Child:IsA("TextButton") and Child.Size == UDim2New(0, 8, 0, 8)) then
-                    Child.Parent = Group
+            local FrameProps = Library:GetTransparencyPropertyFromItem(Frame)
+            if FrameProps then
+                OriginalTransparencies[Frame] = { }
+                for _, Prop in FrameProps do
+                    OriginalTransparencies[Frame][Prop] = Frame[Prop]
+                    table.insert(CachedFadeItems, { Instance = Frame, Prop = Prop, Orig = Frame[Prop] })
                 end
             end
 
-            FadeGroup = Group
-        end)
+            for _, Descendant in Frame:GetDescendants() do
+                local DProps = Library:GetTransparencyPropertyFromItem(Descendant)
+                if DProps then
+                    OriginalTransparencies[Descendant] = { }
+                    for _, Prop in DProps do
+                        OriginalTransparencies[Descendant][Prop] = Descendant[Prop]
+                        table.insert(CachedFadeItems, { Instance = Descendant, Prop = Prop, Orig = Descendant[Prop] })
+                    end
+                end
+            end
+        end
 
         local ApplyTransparency = function(Hide)
-            if FadeGroup then
+            local TweenInfoObj = TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction)
+            for _, Item in CachedFadeItems do
                 if Hide then
-                    TweenService:Create(FadeGroup, TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), { GroupTransparency = 1 }):Play()
+                    TweenService:Create(Item.Instance, TweenInfoObj, { [Item.Prop] = 1 }):Play()
                 else
-                    TweenService:Create(FadeGroup, TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), { GroupTransparency = 0 }):Play()
+                    TweenService:Create(Item.Instance, TweenInfoObj, { [Item.Prop] = Item.Orig }):Play()
                 end
             end
         end
@@ -9073,7 +9086,9 @@ local Library do
                 Frame.Visible = true
                 ApplyTransparency(false)
             else
+                StoreTransparencies()
                 ApplyTransparency(true)
+
                 task.delay(Library.Tween.Time + 0.05, function()
                     if not Window.IsOpen then
                         Frame.Visible = false
