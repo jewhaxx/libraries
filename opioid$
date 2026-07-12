@@ -1,4 +1,4 @@
--- opioid$ v1.5.3
+-- opioid$ v1.5.4
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -7818,6 +7818,11 @@ local Library do
 
             IsOpen = false,
             Rainbow = false,
+            StoredColor = nil,
+            StoredHue = 0,
+            StoredSaturation = 0,
+            StoredValue = 0,
+            StoredAlpha = 0,
 
             Color = FromRGB(0, 0, 0),
 
@@ -8447,9 +8452,19 @@ local Library do
             Colorpicker.Rainbow = not Colorpicker.Rainbow
 
             if Colorpicker.Rainbow then
+                Colorpicker.StoredColor = Colorpicker.Color
+                Colorpicker.StoredHue = Colorpicker.Hue
+                Colorpicker.StoredSaturation = Colorpicker.Saturation
+                Colorpicker.StoredValue = Colorpicker.Value
+                Colorpicker.StoredAlpha = Colorpicker.Alpha
+
                 Items["RainbowIndicator"]:Tween(nil, { BackgroundColor3 = Library.Theme.Accent })
                 Items["RainbowIndicator"]:ChangeItemTheme({ BackgroundColor3 = "Accent" })
             else
+                if Colorpicker.StoredColor then
+                    Colorpicker:Set(Colorpicker.StoredColor, Colorpicker.StoredAlpha)
+                end
+
                 Items["RainbowIndicator"]:Tween(nil, { BackgroundColor3 = Library.Theme.Element })
                 Items["RainbowIndicator"]:ChangeItemTheme({ BackgroundColor3 = "Element" })
             end
@@ -11274,6 +11289,7 @@ local Library do
         end
 
         function Dropdown:Add(Option)
+            local ParentZ = Items["OptionHolder"].Instance.ZIndex
             local OptionButton = Instances:Create("TextButton", {
                 Parent = Items["OptionHolder"].Instance,
                 FontFace = Library.Font,
@@ -11285,7 +11301,7 @@ local Library do
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 Size = UDim2New(1, 0, 0, 15),
-                ZIndex = 5,
+                ZIndex = ParentZ + 4,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
@@ -11303,7 +11319,7 @@ local Library do
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 BorderSizePixel = 0,
-                ZIndex = 5,
+                ZIndex = ParentZ + 5,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
@@ -11971,6 +11987,7 @@ local Library do
         end
 
         function Listbox:Add(Option)
+            local ParentZ = Items["RealListbox"].Instance.ZIndex
             local OptionButton = Instances:Create("TextButton", {
                 Parent = Items["RealListbox"].Instance,
                 FontFace = Library.Font,
@@ -11982,7 +11999,7 @@ local Library do
                 BackgroundTransparency = 1,
                 BorderSizePixel = 0,
                 Size = UDim2New(1, 0, 0, 15),
-                ZIndex = 5,
+                ZIndex = ParentZ + 4,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
@@ -12000,7 +12017,7 @@ local Library do
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Center,
                 BorderSizePixel = 0,
-                ZIndex = 5,
+                ZIndex = ParentZ + 5,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             }) 
