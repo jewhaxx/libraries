@@ -1,4 +1,4 @@
--- opioid$ v1.5.4
+-- opioid$ v1.5.5
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -7148,6 +7148,7 @@ local Library do
                     BorderSizePixel = 0,
                     TextSize = 11,
                     Name = "\0",
+                    ZIndex = ExplorerScroll.Instance.ZIndex + 5,
                 })
                 TableInsert(ExplorerEntryButtons, Empty)
                 ExplorerScroll.Instance.CanvasSize = UDim2New(0, 0, 0, 22)
@@ -7191,7 +7192,7 @@ local Library do
                     BorderSizePixel = 0,
                     TextSize = 12,
                     Name = "\0",
-                    ZIndex = 5,
+                    ZIndex = ExplorerScroll.Instance.ZIndex + 4,
                 })
                 LayoutOrder = LayoutOrder + 1
                 TotalHeight = TotalHeight + 18
@@ -7253,7 +7254,7 @@ local Library do
                     BorderSizePixel = 0,
                     TextSize = 12,
                     Name = "\0",
-                    ZIndex = 5,
+                    ZIndex = ExplorerScroll.Instance.ZIndex + 4,
                 })
                 LayoutOrder = LayoutOrder + 1
                 TotalHeight = TotalHeight + 18
