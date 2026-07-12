@@ -1,9 +1,6 @@
--- kimikahax
+-- opioid$
 --[[
-    Remake based on thugsense (by samet) + vaderhaxx patterns
-
-    Assign different flags to each element to prevent from configs overriding eachother
-    Example script is at the bottom
+    This library is HEAVILY based on finobe/samet's works
 
     Documentation:
     function Library:Window(Data: table
@@ -305,7 +302,7 @@ local Library do
     Library.Pages.__index = Library.Pages
 
     local Keys = {
-        ["Unknown"]           = "Unknown",
+        ["Unknown"]           = "",
         ["Backspace"]         = "Back",
         ["Tab"]               = "Tab",
         ["Clear"]             = "Clear",
@@ -1627,8 +1624,56 @@ local Library do
             end
         end
 
+        Watermark.Format = Name
+        Watermark.Formatter = nil
+
+        function Watermark:Update(Text)
+            if Text then
+                Watermark.Format = Text
+            end
+            local DisplayText = Watermark.Format
+            if Watermark.Formatter and type(Watermark.Formatter) == "function" then
+                local Success, Result = pcall(Watermark.Formatter)
+                if Success and type(Result) == "string" then
+                    DisplayText = Result
+                end
+            end
+            if Items["Title"] and Items["Title"].Instance then
+                Items["Title"].Instance.Text = DisplayText
+            end
+        end
+
+        function Watermark:SetFormatter(Func)
+            if type(Func) == "function" then
+                Watermark.Formatter = Func
+            else
+                Watermark.Formatter = nil
+            end
+        end
+
         Library.WatermarkInstance = Watermark
         Library.WatermarkFrame = Items["Watermark"].Instance
+
+        Library.UpdateWatermark = function(self, Text)
+            if Library.WatermarkInstance and Library.WatermarkInstance.Update then
+                Library.WatermarkInstance:Update(Text)
+            end
+        end
+
+        Library.SetWatermarkFormatter = function(self, Func)
+            if Library.WatermarkInstance and Library.WatermarkInstance.SetFormatter then
+                Library.WatermarkInstance:SetFormatter(Func)
+            end
+        end
+
+        task.spawn(function()
+            while true do
+                if Library.WatermarkInstance and Library.WatermarkInstance.Formatter then
+                    Library.WatermarkInstance:Update()
+                end
+                task.wait(0.5)
+            end
+        end)
 
         return Watermark
     end
@@ -1916,6 +1961,10 @@ local Library do
         end
 
         function KeybindList:Add(Mode, Name, Key)
+            if not Key or Key == "" or Key == "Unknown" then
+                return nil
+            end
+
             local NewKey = Instances:Create("TextLabel", {
                 Parent = Items["Content"].Instance,
                 FontFace = Library.Font,
@@ -1939,6 +1988,11 @@ local Library do
             }):AddToTheme({Color = "Text Border"})
         
             function NewKey:Set(Mode, Name, Key)
+                if not Key or Key == "" or Key == "Unknown" then
+                    NewKey.Instance.Visible = false
+                    return
+                end
+                NewKey.Instance.Visible = true
                 NewKey.Instance.Text = "(" .. Mode .. ") " .. Name .. " - " .. Key
             end
 
@@ -4246,7 +4300,7 @@ local Library do
 
             if State.Lyrics and #State.Lyrics > 0 then
                 local CurrentLyricIdx = 0
-                local AdjustedProgress = State.Progress - 300
+                local AdjustedProgress = State.Progress - 100
                 for i, Line in State.Lyrics do
                     if Line.time <= AdjustedProgress then
                         CurrentLyricIdx = i
@@ -4275,12 +4329,12 @@ local Library do
                         CurrText = "♪"
                     end
 
-                    TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.2), { TextTransparency = 1 }):Play()
-                    task.delay(0.2, function()
+                    TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.15), { TextTransparency = 1 }):Play()
+                    task.delay(0.15, function()
                         Items["LyricsPrev"].Instance.Text = PrevText
                         Items["LyricsCurrent"].Instance.Text = CurrText
                         Items["LyricsNext"].Instance.Text = NextText
-                        TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.2), { TextTransparency = 0 }):Play()
+                        TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.15), { TextTransparency = 0 }):Play()
                     end)
                 end
             end
@@ -4524,6 +4578,57 @@ local Library do
 
         Library.MusicPlayerInstance = MusicPlayer
         MusicPlayer.Items = Items
+
+        local TokenFile = Library.Folders.Configs .. "/spotify_token.json"
+
+        Library.LoadSpotifyToken = function()
+            if not isfile(TokenFile) then
+                return
+            end
+            local Success, Content = pcall(readfile, TokenFile)
+            if not Success or not Content then
+                return
+            end
+            local ParseSuccess, Data = pcall(function()
+                return HttpService:JSONDecode(Content)
+            end)
+            if not ParseSuccess or type(Data) ~= "table" or not Data.token then
+                pcall(delfile, TokenFile)
+                return
+            end
+            Library.SpotifyToken = Data.token
+            task.spawn(function()
+                task.wait(1)
+                if Library.MusicPlayerInstance then
+                    Library.MusicPlayerInstance:Refresh()
+                end
+            end)
+        end
+
+        Library.SaveSpotifyToken = function(Token)
+            if not Token or Token == "" then
+                if isfile(TokenFile) then
+                    pcall(delfile, TokenFile)
+                end
+                return
+            end
+            local Data = { token = Token }
+            pcall(function()
+                writefile(TokenFile, HttpService:JSONEncode(Data))
+            end)
+        end
+
+        Library.DeleteSpotifyToken = function()
+            if isfile(TokenFile) then
+                pcall(delfile, TokenFile)
+            end
+            Library.SpotifyToken = ""
+        end
+
+        task.spawn(function()
+            task.wait(2)
+            Library.LoadSpotifyToken()
+        end)
 
         function MusicPlayer:SetVisibility(Bool)
             Items["Window"].Instance.Visible = Bool
@@ -7412,6 +7517,24 @@ local Library do
                 if Library.MusicPlayerInstance then
                     Library.MusicPlayerInstance:Refresh()
                 end
+
+                task.spawn(function()
+                    task.wait(3)
+                    if Library.SpotifyToken and Library.SpotifyToken ~= "" then
+                        if not Library.MusicPlayerInstance or not Library.MusicPlayerInstance.Items then
+                            Library.DeleteSpotifyToken()
+                            Library:Notification("Token invalid, removed", 3, FromRGB(220, 90, 90))
+                            return
+                        end
+                        local LastError = Library.MusicPlayerInstance.Items["SongName"] and Library.MusicPlayerInstance.Items["SongName"].Instance.Text
+                        if LastError and (LastError:lower():find("error") or LastError:lower():find("unauthorized")) then
+                            Library.DeleteSpotifyToken()
+                            Library:Notification("Token invalid, removed", 3, FromRGB(220, 90, 90))
+                        else
+                            Library.SaveSpotifyToken(Library.SpotifyToken)
+                        end
+                    end
+                end)
             end
         })
 
@@ -8071,28 +8194,13 @@ local Library do
             local Descendants = Items["ColorpickerWindow"].Instance:GetDescendants()
             TableInsert(Descendants, Items["ColorpickerWindow"].Instance)
 
-            local NewTween
             for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
                 if not StringFind(Value.ClassName, "UI") then 
                     Value.ZIndex = Bool and 10001 or 1
                 end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool)
-                end
             end
 
-            Library:Connect(NewTween.Tween.Completed, function()
+            task.delay(Library.Tween.Time, function()
                 Debounce = false
                 Items["ColorpickerWindow"].Instance.Visible = Bool
             end)
@@ -9228,29 +9336,9 @@ local Library do
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
             end
 
-            local Descendants = Items["Page"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["Page"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do
-                        NewTween = Library:FadeItem(Value, Property, Bool)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
+            task.delay(Library.Tween.Time, function()
                 Items["Page"].Instance.Visible = Bool
+                Debounce = false
             end)
         end
         Items["Inactive"]:Connect("MouseButton1Down", function()
@@ -9459,29 +9547,9 @@ local Library do
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
             end
 
-            local Descendants = Items["Subtab"].Instance:GetDescendants()
-            TableInsert(Descendants, Items["Subtab"].Instance)
-
-            local NewTween
-            for Index, Value in Descendants do
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then
-                    continue
-                end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do
-                        NewTween = Library:FadeItem(Value, Property, Bool)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool)
-                end
-            end
-
-            Library:Connect(NewTween.Tween.Completed, function()
-                Debounce = false
+            task.delay(Library.Tween.Time, function()
                 Items["Subtab"].Instance.Visible = Bool
+                Debounce = false
             end)
         end
 
@@ -9915,24 +9983,7 @@ local Library do
                 local Descendants = SubItems["Content"].Instance:GetDescendants()
                 TableInsert(Descendants, SubItems["Content"].Instance)
 
-                local NewTween
-                for Index, Value in Descendants do
-                    local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                    if not ValueIndex then
-                        continue
-                    end
-
-                    if type(ValueIndex) == "table" then
-                        for _, Property in ValueIndex do
-                            NewTween = Library:FadeItem(Value, Property, Bool)
-                        end
-                    else
-                        NewTween = Library:FadeItem(Value, ValueIndex, Bool)
-                    end
-                end
-
-                Library:Connect(NewTween.Tween.Completed, function()
+                task.delay(Library.Tween.Time, function()
                     Debounce = false
                     SubItems["Content"].Instance.Visible = Bool
                 end)
@@ -11332,28 +11383,13 @@ local Library do
             local Descendants = Items["OptionHolder"].Instance:GetDescendants()
             TableInsert(Descendants, Items["OptionHolder"].Instance)
 
-            local NewTween
             for Index, Value in Descendants do 
-                local ValueIndex = Library:GetTransparencyPropertyFromItem(Value)
-
-                if not ValueIndex then 
-                    continue
-                end
-
                 if not StringFind(Value.ClassName, "UI") then 
                     Value.ZIndex = Bool and 15 or 1
                 end
-
-                if type(ValueIndex) == "table" then
-                    for _, Property in ValueIndex do 
-                        NewTween = Library:FadeItem(Value, Property, Bool)
-                    end
-                else
-                    NewTween = Library:FadeItem(Value, ValueIndex, Bool)
-                end
             end
 
-            Library:Connect(NewTween.Tween.Completed, function()
+            task.delay(Library.Tween.Time, function()
                 Debounce = false
                 Items["OptionHolder"].Instance.Visible = Bool
                 Items["OptionHolder"].Instance.ZIndex = Bool and 15 or 1
