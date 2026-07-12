@@ -1,4 +1,4 @@
--- opioid$ v1.4
+-- opioid$ v1.4.1
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -8930,10 +8930,10 @@ local Library do
                 RGBSequenceKeypoint(1, FromRGB(235, 157, 255))
             }
             StrokeGradient.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint(0, 0.8),
-                NumberSequenceKeypoint(0.25, 0),
-                NumberSequenceKeypoint(0.75, 0),
-                NumberSequenceKeypoint(1, 0.8)
+                NumberSequenceKeypoint.new(0, 0.8),
+                NumberSequenceKeypoint.new(0.25, 0),
+                NumberSequenceKeypoint.new(0.75, 0),
+                NumberSequenceKeypoint.new(1, 0.8)
             })
             StrokeGradient.Parent = Items["AccentBorder"].Instance
 
