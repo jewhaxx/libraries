@@ -7602,7 +7602,7 @@ local Library do
         UISettingsSection:Textbox({
             Name = "Spotify Token",
             Default = "",
-            Placeholder = "Paste token here...,
+            Placeholder = "Paste token here...",
             Flag = "Settings_SpotifyToken",
             Callback = function(Value)
                 Library.SpotifyToken = Value
