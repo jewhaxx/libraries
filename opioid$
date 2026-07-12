@@ -1,4 +1,4 @@
--- opioid$ v1.5
+-- opioid$ v1.5.2
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -1616,8 +1616,14 @@ local Library do
         if not Frame then
             return
         end
-        ZCounter = ZCounter + 1
+        ZCounter = ZCounter + 10
+        local Delta = ZCounter - Frame.ZIndex
         Frame.ZIndex = ZCounter
+        for _, Descendant in Frame:GetDescendants() do
+            if Descendant:IsA("GuiObject") then
+                Descendant.ZIndex = Descendant.ZIndex + Delta
+            end
+        end
     end
 
     Library.IsMouseOverFrame = function(self, Frame)
