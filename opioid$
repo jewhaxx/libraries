@@ -1,4 +1,4 @@
--- opioid$ v1.6
+-- opioid$ v1.6.1
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -7602,7 +7602,7 @@ local Library do
         UISettingsSection:Textbox({
             Name = "Spotify Token",
             Default = "",
-            Placeholder = "Paste token here...",
+            Placeholder = "Paste token here (no Bearer prefix)...",
             Flag = "Settings_SpotifyToken",
             Callback = function(Value)
                 Library.SpotifyToken = Value
@@ -7610,7 +7610,7 @@ local Library do
         })
 
         UISettingsSection:Button({
-            Name = "Set Token",
+            Name = "Set Token & Refresh",
             Callback = function()
                 local Token = Library.Flags["Settings_SpotifyToken"]
                 if Token and type(Token) == "string" and Token ~= "" then
@@ -7774,10 +7774,8 @@ local Library do
         AboutSection:Label({ Name = "$$ neuro.net $$", Alignment = "Center" })
         AboutSection:Label({ Name = "This library is licensed as opioid$", Alignment = "Center" })
         AboutSection:Divider()
-        AboutSection:Label({ Name = "- unvhook (backend, frontend [library])", Alignment = "Center" })
+        AboutSection:Label({ Name = "- unvhook (backend, frontend [library]", Alignment = "Center" })
         AboutSection:Label({ Name = "- vince (backend)", Alignment = "Center" })
-        AboutSection:Divider()
-        AboutSection:Label({ Name = "version: 1.6", Alignment = "Left" })
 
         AboutSection:Button({
             Name = "Unload Library",
@@ -12086,6 +12084,8 @@ local Library do
                         OptionData:Toggle("Inactive")
                     end
                 end
+
+                Library.Flags[Listbox.Flag] = Listbox.Value
 
                 if Listbox.Callback then 
                     Library:SafeCall(Listbox.Callback, Listbox.Value)
