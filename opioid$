@@ -1,4 +1,4 @@
--- opioid$ v1.3.1
+-- opioid$ v1.4
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -8917,8 +8917,36 @@ local Library do
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0",
-                Color = FromRGB(235, 157, 255)
+                Color = FromRGB(235, 157, 255),
+                Thickness = 1.5
             })  Items["AccentBorder"]:AddToTheme({Color = "Accent"})
+
+            local StrokeGradient = InstanceNew("UIGradient")
+            StrokeGradient.Name = "\0"
+            StrokeGradient.Rotation = 0
+            StrokeGradient.Color = RGBSequence{
+                RGBSequenceKeypoint(0, FromRGB(235, 157, 255)),
+                RGBSequenceKeypoint(0.5, FromRGB(167, 139, 250)),
+                RGBSequenceKeypoint(1, FromRGB(235, 157, 255))
+            }
+            StrokeGradient.Transparency = NumberSequence.new({
+                NumberSequenceKeypoint(0, 0.8),
+                NumberSequenceKeypoint(0.25, 0),
+                NumberSequenceKeypoint(0.75, 0),
+                NumberSequenceKeypoint(1, 0.8)
+            })
+            StrokeGradient.Parent = Items["AccentBorder"].Instance
+
+            local GradientAngle = 0
+            task.spawn(function()
+                while true do
+                    local Dt = 0.033
+                    local FullRotationTime = Library.Tween.Time * 10
+                    GradientAngle = (GradientAngle + (Dt / FullRotationTime) * 360) % 360
+                    StrokeGradient.Rotation = GradientAngle
+                    task.wait(Dt)
+                end
+            end)
             
             -- Title position: "Left" = left half (subtitle on right), "Center" = full width centered
             local TitleIsCenter = Window.TitlePosition == "Center"
@@ -9033,46 +9061,6 @@ local Library do
             }):AddToTheme({Color = "Outline"})
         end
 
-        local OriginalTransparencies = { }
-        local CachedFadeItems = { }
-
-        local StoreTransparencies = function()
-            OriginalTransparencies = { }
-            CachedFadeItems = { }
-            local Frame = Items["MainFrame"].Instance
-
-            local FrameProps = Library:GetTransparencyPropertyFromItem(Frame)
-            if FrameProps then
-                OriginalTransparencies[Frame] = { }
-                for _, Prop in FrameProps do
-                    OriginalTransparencies[Frame][Prop] = Frame[Prop]
-                    table.insert(CachedFadeItems, { Instance = Frame, Prop = Prop, Orig = Frame[Prop] })
-                end
-            end
-
-            for _, Descendant in Frame:GetDescendants() do
-                local DProps = Library:GetTransparencyPropertyFromItem(Descendant)
-                if DProps then
-                    OriginalTransparencies[Descendant] = { }
-                    for _, Prop in DProps do
-                        OriginalTransparencies[Descendant][Prop] = Descendant[Prop]
-                        table.insert(CachedFadeItems, { Instance = Descendant, Prop = Prop, Orig = Descendant[Prop] })
-                    end
-                end
-            end
-        end
-
-        local ApplyTransparency = function(Hide)
-            local TweenInfoObj = TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction)
-            for _, Item in CachedFadeItems do
-                if Hide then
-                    TweenService:Create(Item.Instance, TweenInfoObj, { [Item.Prop] = 1 }):Play()
-                else
-                    TweenService:Create(Item.Instance, TweenInfoObj, { [Item.Prop] = Item.Orig }):Play()
-                end
-            end
-        end
-
         function Window:SetOpen(Bool)
             if Window.IsOpen == Bool then
                 return
@@ -9081,20 +9069,7 @@ local Library do
             Window.IsOpen = Bool
 
             local Frame = Items["MainFrame"].Instance
-
-            if Bool then
-                Frame.Visible = true
-                ApplyTransparency(false)
-            else
-                StoreTransparencies()
-                ApplyTransparency(true)
-
-                task.delay(Library.Tween.Time + 0.05, function()
-                    if not Window.IsOpen then
-                        Frame.Visible = false
-                    end
-                end)
-            end
+            Frame.Visible = Bool
         end
 
         Library:Connect(UserInputService.InputBegan, function(Input)
