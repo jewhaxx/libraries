@@ -1,4 +1,4 @@
--- opioid$ v1.5.2
+-- opioid$ v1.5.3
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -11417,7 +11417,8 @@ local Library do
 
             if Bool then 
                 Items["OptionHolder"].Instance.Visible = true
-                Items["OptionHolder"].Instance.ZIndex = 15
+                local TopZ = Items["Dropdown"].Instance.ZIndex + 10
+                Items["OptionHolder"].Instance.ZIndex = TopZ
                 Items["Open"].Instance.Text = "-"
                 Items["Open"].Instance.Position = UDim2New(0, -5, 0, -1)
             else
@@ -11428,9 +11429,10 @@ local Library do
             local Descendants = Items["OptionHolder"].Instance:GetDescendants()
             TableInsert(Descendants, Items["OptionHolder"].Instance)
 
+            local TopZ = Items["Dropdown"].Instance.ZIndex + 10
             for Index, Value in Descendants do 
                 if not StringFind(Value.ClassName, "UI") then 
-                    Value.ZIndex = Bool and 15 or 1
+                    Value.ZIndex = Bool and TopZ or 1
                 end
             end
 
