@@ -1,4 +1,4 @@
--- opioid$ v1.4.1
+-- opioid$ v1.4.3
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -302,7 +302,7 @@ local Library do
     Library.Pages.__index = Library.Pages
 
     local Keys = {
-        ["Unknown"]           = "",
+        [" "]           = "",
         ["Backspace"]         = "Back",
         ["Tab"]               = "Tab",
         ["Clear"]             = "Clear",
@@ -1983,12 +1983,12 @@ local Library do
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"})
         
-            if not Key or Key == "" or Key == "Unknown" then
+            if not Key or Key == "" or Key == " " then
                 NewKey.Instance.Visible = false
             end
 
             function NewKey:Set(Mode, Name, Key)
-                if not Key or Key == "" or Key == "Unknown" then
+                if not Key or Key == "" or Key == " " then
                     NewKey.Instance.Visible = false
                     return
                 end
@@ -8925,17 +8925,40 @@ local Library do
             StrokeGradient.Name = "\0"
             StrokeGradient.Rotation = 0
             StrokeGradient.Color = RGBSequence{
-                RGBSequenceKeypoint(0, FromRGB(235, 157, 255)),
-                RGBSequenceKeypoint(0.5, FromRGB(167, 139, 250)),
-                RGBSequenceKeypoint(1, FromRGB(235, 157, 255))
+                RGBSequenceKeypoint(0, Library.Theme.Accent),
+                RGBSequenceKeypoint(0.5, Library.Theme.Accent),
+                RGBSequenceKeypoint(1, Library.Theme.Accent)
             }
             StrokeGradient.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint.new(0, 0.8),
-                NumberSequenceKeypoint.new(0.25, 0),
-                NumberSequenceKeypoint.new(0.75, 0),
-                NumberSequenceKeypoint.new(1, 0.8)
+                NumberSequenceKeypoint.new(0, 1),
+                NumberSequenceKeypoint.new(0.1, 1),
+                NumberSequenceKeypoint.new(0.2, 0),
+                NumberSequenceKeypoint.new(0.3, 0),
+                NumberSequenceKeypoint.new(0.4, 1),
+                NumberSequenceKeypoint.new(0.6, 1),
+                NumberSequenceKeypoint.new(0.7, 0),
+                NumberSequenceKeypoint.new(0.8, 0),
+                NumberSequenceKeypoint.new(0.9, 1),
+                NumberSequenceKeypoint.new(1, 1)
             })
             StrokeGradient.Parent = Items["AccentBorder"].Instance
+
+            local function UpdateGradientColor()
+                local Accent = Library.Theme.Accent
+                StrokeGradient.Color = RGBSequence{
+                    RGBSequenceKeypoint(0, Accent),
+                    RGBSequenceKeypoint(0.5, Accent),
+                    RGBSequenceKeypoint(1, Accent)
+                }
+            end
+
+            local OldChangeTheme = Library.ChangeTheme
+            Library.ChangeTheme = function(self, Theme, Color)
+                OldChangeTheme(self, Theme, Color)
+                if Theme == "Accent" then
+                    UpdateGradientColor()
+                end
+            end
 
             local GradientAngle = 0
             task.spawn(function()
