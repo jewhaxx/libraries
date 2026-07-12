@@ -1,4 +1,4 @@
--- opioid$ v1.2
+-- opioid$ v1.3
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -4298,6 +4298,9 @@ local Library do
                 Items["TimeLabel"].Instance.Text = FormatTime(State.Progress) .. " / " .. FormatTime(State.Duration)
             end
 
+        end
+
+        local UpdateLyrics = function()
             if State.Lyrics and #State.Lyrics > 0 then
                 local CurrentLyricIdx = 0
                 local AdjustedProgress = State.Progress - 100
@@ -4329,13 +4332,9 @@ local Library do
                         CurrText = "♪"
                     end
 
-                    TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.15), { TextTransparency = 1 }):Play()
-                    task.delay(0.15, function()
-                        Items["LyricsPrev"].Instance.Text = PrevText
-                        Items["LyricsCurrent"].Instance.Text = CurrText
-                        Items["LyricsNext"].Instance.Text = NextText
-                        TweenService:Create(Items["LyricsCurrent"].Instance, TweenInfo.new(0.15), { TextTransparency = 0 }):Play()
-                    end)
+                    Items["LyricsPrev"].Instance.Text = PrevText
+                    Items["LyricsCurrent"].Instance.Text = CurrText
+                    Items["LyricsNext"].Instance.Text = NextText
                 end
             end
         end
@@ -4572,6 +4571,9 @@ local Library do
                 else
                     State.LastFrameTime = 0
                 end
+
+                UpdateLyrics()
+
                 task.wait(0.033)
             end
         end)
@@ -9029,36 +9031,32 @@ local Library do
 
         local OriginalTransparencies = { }
 
-        local StoreTransparencies = function()
-            OriginalTransparencies = { }
+        local FadeGroup = nil
+        pcall(function()
             local Frame = Items["MainFrame"].Instance
+            local Group = InstanceNew("CanvasGroup")
+            Group.Name = "\0"
+            Group.Size = UDim2New(1, 0, 1, 0)
+            Group.BackgroundTransparency = 1
+            Group.GroupTransparency = 0
+            Group.Parent = Frame
 
-            local FrameProps = Library:GetTransparencyPropertyFromItem(Frame)
-            if FrameProps then
-                OriginalTransparencies[Frame] = { }
-                for _, Prop in FrameProps do
-                    OriginalTransparencies[Frame][Prop] = Frame[Prop]
+            for _, Child in Frame:GetChildren() do
+                if Child ~= Group and not (Child:IsA("TextButton") and Child.Size == UDim2New(0, 8, 0, 8)) then
+                    Child.Parent = Group
                 end
             end
 
-            for _, Descendant in Frame:GetDescendants() do
-                local DProps = Library:GetTransparencyPropertyFromItem(Descendant)
-                if DProps then
-                    OriginalTransparencies[Descendant] = { }
-                    for _, Prop in DProps do
-                        OriginalTransparencies[Descendant][Prop] = Descendant[Prop]
-                    end
-                end
-            end
-        end
+            FadeGroup = Group
+        end)
 
         local ApplyTransparency = function(Hide)
-            local Frame = Items["MainFrame"].Instance
-
-            if Hide then
-                Frame.Visible = false
-            else
-                Frame.Visible = true
+            if FadeGroup then
+                if Hide then
+                    TweenService:Create(FadeGroup, TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), { GroupTransparency = 1 }):Play()
+                else
+                    TweenService:Create(FadeGroup, TweenInfo.new(Library.Tween.Time, Library.Tween.Style, Library.Tween.Direction), { GroupTransparency = 0 }):Play()
+                end
             end
         end
 
@@ -9070,7 +9068,18 @@ local Library do
             Window.IsOpen = Bool
 
             local Frame = Items["MainFrame"].Instance
-            Frame.Visible = Bool
+
+            if Bool then
+                Frame.Visible = true
+                ApplyTransparency(false)
+            else
+                ApplyTransparency(true)
+                task.delay(Library.Tween.Time + 0.05, function()
+                    if not Window.IsOpen then
+                        Frame.Visible = false
+                    end
+                end)
+            end
         end
 
         Library:Connect(UserInputService.InputBegan, function(Input)
