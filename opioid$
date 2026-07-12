@@ -1,4 +1,4 @@
--- opioid$ v1.4.3
+-- opioid$ v1.5
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -302,7 +302,7 @@ local Library do
     Library.Pages.__index = Library.Pages
 
     local Keys = {
-        [" "]           = "",
+        ["Unknown"]           = "",
         ["Backspace"]         = "Back",
         ["Tab"]               = "Tab",
         ["Clear"]             = "Clear",
@@ -566,6 +566,8 @@ local Library do
             self:Connect("InputBegan", function(Input)
                 if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
                     Dragging = true
+
+                    Library:BringToFront(Gui)
 
                     DragStart = Input.Position
                     StartPosition = Gui.Position
@@ -1533,6 +1535,91 @@ local Library do
         end
     end
 
+    Library.SavePath = function(self, Name, Path)
+        if not Name or not Path or Path == "" then
+            return
+        end
+        Library.Folders[Name] = Path
+        if not isfolder(Path) then
+            makefolder(Path)
+        end
+    end
+
+    Library.AnimatedGradients = { }
+
+    Library.ApplyAnimatedGradient = function(self, StrokeInstance)
+        if not StrokeInstance then
+            return
+        end
+
+        local StrokeGradient = InstanceNew("UIGradient")
+        StrokeGradient.Name = "\0"
+        StrokeGradient.Rotation = 0
+        StrokeGradient.Color = RGBSequence{
+            RGBSequenceKeypoint(0, Library.Theme.Accent),
+            RGBSequenceKeypoint(0.5, Library.Theme.Accent),
+            RGBSequenceKeypoint(1, Library.Theme.Accent)
+        }
+        StrokeGradient.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 1),
+            NumberSequenceKeypoint.new(0.1, 1),
+            NumberSequenceKeypoint.new(0.2, 0),
+            NumberSequenceKeypoint.new(0.3, 0),
+            NumberSequenceKeypoint.new(0.4, 1),
+            NumberSequenceKeypoint.new(0.6, 1),
+            NumberSequenceKeypoint.new(0.7, 0),
+            NumberSequenceKeypoint.new(0.8, 0),
+            NumberSequenceKeypoint.new(0.9, 1),
+            NumberSequenceKeypoint.new(1, 1)
+        })
+        StrokeGradient.Parent = StrokeInstance
+
+        local GradientData = {
+            Gradient = StrokeGradient,
+            Angle = 0
+        }
+        TableInsert(Library.AnimatedGradients, GradientData)
+
+        return StrokeGradient
+    end
+
+    task.spawn(function()
+        while true do
+            local Dt = 0.033
+            local FullRotationTime = Library.Tween.Time * 10
+            local Increment = (Dt / FullRotationTime) * 360
+            for _, GradData in Library.AnimatedGradients do
+                GradData.Angle = (GradData.Angle + Increment) % 360
+                GradData.Gradient.Rotation = GradData.Angle
+            end
+            task.wait(Dt)
+        end
+    end)
+
+    local OldChangeThemeForGradients = Library.ChangeTheme
+    Library.ChangeTheme = function(self, Theme, Color)
+        OldChangeThemeForGradients(self, Theme, Color)
+        if Theme == "Accent" then
+            for _, GradData in Library.AnimatedGradients do
+                GradData.Gradient.Color = RGBSequence{
+                    RGBSequenceKeypoint(0, Color),
+                    RGBSequenceKeypoint(0.5, Color),
+                    RGBSequenceKeypoint(1, Color)
+                }
+            end
+        end
+    end
+
+    local ZCounter = 10
+
+    Library.BringToFront = function(self, Frame)
+        if not Frame then
+            return
+        end
+        ZCounter = ZCounter + 1
+        Frame.ZIndex = ZCounter
+    end
+
     Library.IsMouseOverFrame = function(self, Frame)
         Frame = Frame.Instance
 
@@ -1851,13 +1938,15 @@ local Library do
 
             Items["KeybindList"]:MakeDraggable()
 
-            Instances:Create("UIStroke", {
+            local KeybindStroke = Instances:Create("UIStroke", {
                 Parent = Items["KeybindList"].Instance,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0",
                 Color = FromRGB(235, 157, 255)
-            }):AddToTheme({Color = "Accent"})
+            })  KeybindStroke:AddToTheme({Color = "Accent"})
+
+            Library:ApplyAnimatedGradient(KeybindStroke.Instance)
 
             -- UIPadding creates the margin on ALL sides (including bottom) so the
             -- Inline's UIStroke doesn't overflow the KeybindList frame
@@ -1930,7 +2019,7 @@ local Library do
                 Size = UDim2New(0, 100, 0, 15),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Position = UDim2New(0, 0, 0, -1),
+                Position = UDim2New(0, 0, 0, 3),
                 BorderSizePixel = 0,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
@@ -1983,12 +2072,12 @@ local Library do
                 Name = "\0"
             }):AddToTheme({Color = "Text Border"})
         
-            if not Key or Key == "" or Key == " " then
+            if not Key or Key == "" or Key == "Unknown" then
                 NewKey.Instance.Visible = false
             end
 
             function NewKey:Set(Mode, Name, Key)
-                if not Key or Key == "" or Key == " " then
+                if not Key or Key == "" or Key == "Unknown" then
                     NewKey.Instance.Visible = false
                     return
                 end
@@ -3497,27 +3586,15 @@ local Library do
 
             Items["Window"]:MakeDraggable()
 
-            Instances:Create("UIStroke", {
+            local MusicStroke = Instances:Create("UIStroke", {
                 Parent = Items["Window"].Instance,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0",
                 Color = FromRGB(235, 157, 255)
-            }):AddToTheme({ Color = "Accent" })
+            })  MusicStroke:AddToTheme({ Color = "Accent" })
 
-            Instances:Create("UIPadding", {
-                Parent = Items["Window"].Instance,
-                PaddingTop = UDimNew(0, 8),
-                PaddingBottom = UDimNew(0, 8),
-                PaddingLeft = UDimNew(0, 8),
-                PaddingRight = UDimNew(0, 8)
-            })
-
-            Instances:Create("UIListLayout", {
-                Parent = Items["Window"].Instance,
-                SortOrder = Enum.SortOrder.LayoutOrder,
-                Padding = UDimNew(0, 6)
-            })
+            Library:ApplyAnimatedGradient(MusicStroke.Instance)
 
             Items["AccentLine"] = Instances:Create("Frame", {
                 Parent = Items["Window"].Instance,
@@ -3539,6 +3616,20 @@ local Library do
                     NumberSequenceKeypoint.new(0.75, 0),
                     NumberSequenceKeypoint.new(1, 1)
                 })
+            })
+
+            Instances:Create("UIPadding", {
+                Parent = Items["Window"].Instance,
+                PaddingTop = UDimNew(0, 8),
+                PaddingBottom = UDimNew(0, 8),
+                PaddingLeft = UDimNew(0, 8),
+                PaddingRight = UDimNew(0, 8)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["Window"].Instance,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 6)
             })
 
             Items["Title"] = Instances:Create("TextLabel", {
@@ -4685,27 +4776,15 @@ local Library do
             Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
             Library.ESPPreviewFrame = Items["Window"].Instance
 
-            Instances:Create("UIStroke", {
+            local ESPStroke = Instances:Create("UIStroke", {
                 Parent = Items["Window"].Instance,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0",
                 Color = FromRGB(235, 157, 255)
-            }):AddToTheme({Color = "Accent"})
+            })  ESPStroke:AddToTheme({Color = "Accent"})
 
-            Instances:Create("UIPadding", {
-                Parent = Items["Window"].Instance,
-                PaddingTop = UDimNew(0, 8),
-                PaddingBottom = UDimNew(0, 8),
-                PaddingLeft = UDimNew(0, 8),
-                PaddingRight = UDimNew(0, 8)
-            })
-
-            Instances:Create("UIListLayout", {
-                Parent = Items["Window"].Instance,
-                SortOrder = Enum.SortOrder.LayoutOrder,
-                Padding = UDimNew(0, 6)
-            })
+            Library:ApplyAnimatedGradient(ESPStroke.Instance)
 
             Items["AccentLine"] = Instances:Create("Frame", {
                 Parent = Items["Window"].Instance,
@@ -4727,6 +4806,20 @@ local Library do
                     NumberSequenceKeypoint.new(0.75, 0),
                     NumberSequenceKeypoint.new(1, 1)
                 })
+            })
+
+            Instances:Create("UIPadding", {
+                Parent = Items["Window"].Instance,
+                PaddingTop = UDimNew(0, 8),
+                PaddingBottom = UDimNew(0, 8),
+                PaddingLeft = UDimNew(0, 8),
+                PaddingRight = UDimNew(0, 8)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["Window"].Instance,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 6)
             })
 
             Items["Title"] = Instances:Create("TextButton", {
@@ -5602,16 +5695,17 @@ local Library do
             Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
             Library.InstanceTreeFrame = Items["Window"].Instance
 
-            Instances:Create("UIStroke", {
+            local TreeStroke = Instances:Create("UIStroke", {
                 Parent = Items["Window"].Instance,
                 ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
                 LineJoinMode = Enum.LineJoinMode.Miter,
                 Name = "\0",
                 Color = FromRGB(235, 157, 255)
-            }):AddToTheme({Color = "Accent"})
+            })  TreeStroke:AddToTheme({Color = "Accent"})
+
+            Library:ApplyAnimatedGradient(TreeStroke.Instance)
 
             Items["Window"]:MakeDraggable()
-
 
             Items["AccentLine"] = Instances:Create("Frame", {
                 Parent = Items["Window"].Instance,
@@ -8921,55 +9015,7 @@ local Library do
                 Thickness = 1.5
             })  Items["AccentBorder"]:AddToTheme({Color = "Accent"})
 
-            local StrokeGradient = InstanceNew("UIGradient")
-            StrokeGradient.Name = "\0"
-            StrokeGradient.Rotation = 0
-            StrokeGradient.Color = RGBSequence{
-                RGBSequenceKeypoint(0, Library.Theme.Accent),
-                RGBSequenceKeypoint(0.5, Library.Theme.Accent),
-                RGBSequenceKeypoint(1, Library.Theme.Accent)
-            }
-            StrokeGradient.Transparency = NumberSequence.new({
-                NumberSequenceKeypoint.new(0, 1),
-                NumberSequenceKeypoint.new(0.1, 1),
-                NumberSequenceKeypoint.new(0.2, 0),
-                NumberSequenceKeypoint.new(0.3, 0),
-                NumberSequenceKeypoint.new(0.4, 1),
-                NumberSequenceKeypoint.new(0.6, 1),
-                NumberSequenceKeypoint.new(0.7, 0),
-                NumberSequenceKeypoint.new(0.8, 0),
-                NumberSequenceKeypoint.new(0.9, 1),
-                NumberSequenceKeypoint.new(1, 1)
-            })
-            StrokeGradient.Parent = Items["AccentBorder"].Instance
-
-            local function UpdateGradientColor()
-                local Accent = Library.Theme.Accent
-                StrokeGradient.Color = RGBSequence{
-                    RGBSequenceKeypoint(0, Accent),
-                    RGBSequenceKeypoint(0.5, Accent),
-                    RGBSequenceKeypoint(1, Accent)
-                }
-            end
-
-            local OldChangeTheme = Library.ChangeTheme
-            Library.ChangeTheme = function(self, Theme, Color)
-                OldChangeTheme(self, Theme, Color)
-                if Theme == "Accent" then
-                    UpdateGradientColor()
-                end
-            end
-
-            local GradientAngle = 0
-            task.spawn(function()
-                while true do
-                    local Dt = 0.033
-                    local FullRotationTime = Library.Tween.Time * 10
-                    GradientAngle = (GradientAngle + (Dt / FullRotationTime) * 360) % 360
-                    StrokeGradient.Rotation = GradientAngle
-                    task.wait(Dt)
-                end
-            end)
+            Library:ApplyAnimatedGradient(Items["AccentBorder"].Instance)
             
             -- Title position: "Left" = left half (subtitle on right), "Center" = full width centered
             local TitleIsCenter = Window.TitlePosition == "Center"
