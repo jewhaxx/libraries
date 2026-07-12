@@ -1,4 +1,4 @@
--- opioid$ v1.5.5
+-- opioid$ v1.6
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -7203,14 +7203,15 @@ local Library do
                     Position = UDim2New(0, 7, 0.5, -6),
                     BackgroundTransparency = 1,
                     Image = Library:GetImage("Folder"),
-                    ImageColor3 = FromRGB(170, 170, 178),  -- grey-ish
+                    ImageColor3 = FromRGB(170, 170, 178),
                     Name = "\0",
+                    ZIndex = Btn.Instance.ZIndex + 1,
                 })
 
                 local Label = Instances:Create("TextLabel", {
                     Parent = Btn.Instance,
                     FontFace = Library.Font,
-                    TextColor3 = FromRGB(180, 180, 188),  -- grey-ish text for folders
+                    TextColor3 = FromRGB(180, 180, 188),
                     Text = Folder.Name,
                     BackgroundTransparency = 1,
                     Position = UDim2New(0, 23, 0, 0),
@@ -7220,6 +7221,7 @@ local Library do
                     BorderSizePixel = 0,
                     TextSize = 12,
                     Name = "\0",
+                    ZIndex = Btn.Instance.ZIndex + 1,
                 })
 
                 Btn:Connect("MouseButton1Down", function()
@@ -7273,6 +7275,7 @@ local Library do
                     BorderSizePixel = 0,
                     TextSize = 12,
                     Name = "\0",
+                    ZIndex = Btn.Instance.ZIndex + 1,
                 })
                 Label:AddToTheme({TextColor3 = "Text"})
 
@@ -7599,7 +7602,7 @@ local Library do
         UISettingsSection:Textbox({
             Name = "Spotify Token",
             Default = "",
-            Placeholder = "Paste token here (no Bearer prefix)...",
+            Placeholder = "Paste token here...,
             Flag = "Settings_SpotifyToken",
             Callback = function(Value)
                 Library.SpotifyToken = Value
@@ -7607,7 +7610,7 @@ local Library do
         })
 
         UISettingsSection:Button({
-            Name = "Set Token & Refresh",
+            Name = "Set Token",
             Callback = function()
                 local Token = Library.Flags["Settings_SpotifyToken"]
                 if Token and type(Token) == "string" and Token ~= "" then
@@ -7771,8 +7774,10 @@ local Library do
         AboutSection:Label({ Name = "$$ neuro.net $$", Alignment = "Center" })
         AboutSection:Label({ Name = "This library is licensed as opioid$", Alignment = "Center" })
         AboutSection:Divider()
-        AboutSection:Label({ Name = "- unvhook (backend, frontend [library]", Alignment = "Center" })
+        AboutSection:Label({ Name = "- unvhook (backend, frontend [library])", Alignment = "Center" })
         AboutSection:Label({ Name = "- vince (backend)", Alignment = "Center" })
+        AboutSection:Divider()
+        AboutSection:Label({ Name = "version: 1.6", Alignment = "Left" })
 
         AboutSection:Button({
             Name = "Unload Library",
