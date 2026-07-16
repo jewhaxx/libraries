@@ -525,7 +525,7 @@ do
 
     local function DownloadAsset(FileName, Url)
         if isfile(FileName) then
-            AddConsoleLog(StringFormat("%s already exists", FileName), "Warning")
+            AddConsoleLog(StringFormat(" %s already exists", FileName), "Warning")
             return
         end
         local Dir = FileName:match("^(.*)/[^/]+$")
@@ -537,20 +537,20 @@ do
             writefile(FileName, game:HttpGet(Url))
         end)
         if Success then
-            AddConsoleLog(StringFormat("Downloaded %s", FileName), "Success")
+            AddConsoleLog(StringFormat(" Downloaded %s", FileName), "Success")
         else
-            AddConsoleLog(StringFormat("Failed to download %s: %s", FileName, tostring(Result)), "Error")
+            AddConsoleLog(StringFormat(" Failed to download %s: %s", FileName, tostring(Result)), "Error")
         end
     end
 
     local function WaitForGame()
         SetStep("Waiting for game to load...")
-        AddConsoleLog("Waiting for game assets", "Warning")
+        AddConsoleLog(" Waiting for game assets", "Warning")
         if not game:IsLoaded() then
             game.Loaded:Wait()
         end
         ContentProvider:PreloadAsync({ workspace, game:GetService("Players") })
-        AddConsoleLog("Game loaded successfully", "Success")
+        AddConsoleLog(" Game loaded successfully", "Success")
     end
 
     local function ExecuteScript(Path, Delay)
@@ -564,24 +564,27 @@ do
                 loadfile(Path)()
             end)
             if Success then
-                AddConsoleLog(StringFormat("Loaded %s", Path), "Success")
+                AddConsoleLog(StringFormat(" Loaded %s", Path), "Success")
             else
-                AddConsoleLog(StringFormat("Failed to load %s: %s", Path, tostring(Result)), "Error")
+                AddConsoleLog(StringFormat(" Failed to load %s: %s", Path, tostring(Result)), "Error")
             end
         else
-            AddConsoleLog(StringFormat("File not found: %s", Path), "Error")
+            AddConsoleLog(StringFormat(" File not found: %s", Path), "Error")
         end
     end
 
     local function LoadstringScript(Link)
         SetStep(StringFormat("Loading from %s", Link))
         local Success, Result = pcall(function()
-            loadstring(game:HttpGet(Link))()
+            local Fn = loadstring(game:HttpGet(Link))
+            if Fn then
+                task.spawn(Fn)
+            end
         end)
         if Success then
-            AddConsoleLog(StringFormat("Loaded %s", Link), "Success")
+            AddConsoleLog(StringFormat(" Loaded %s", Link), "Success")
         else
-            AddConsoleLog(StringFormat("Failed to load %s: %s", Link, tostring(Result)), "Error")
+            AddConsoleLog(StringFormat(" Failed to load %s: %s", Link, tostring(Result)), "Error")
         end
     end
 
@@ -689,8 +692,8 @@ do
             task.wait(0.1)
         end
         SetProgress(1)
-        SetStep("Complete!")
-        AddConsoleLog("All steps completed", "Success")
+        SetStep("Loaded")
+        AddConsoleLog(" Successfully loaded", "Success")
         task.wait(1.5)
         FadeOut()
     end
