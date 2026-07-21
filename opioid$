@@ -1,4 +1,4 @@
--- opioid$ v1.7
+-- opioid$ v1.7.1
 --[[
     This library is HEAVILY based on finobe/samet's works
 
@@ -7683,7 +7683,7 @@ local Library do
         UISettingsSection:Textbox({
             Name = "Spotify Token",
             Default = "",
-            Placeholder = "Paste token here (no Bearer prefix)...",
+            Placeholder = "Spotify token..",
             Flag = "Settings_SpotifyToken",
             Callback = function(Value)
                 Library.SpotifyToken = Value
@@ -7691,7 +7691,7 @@ local Library do
         })
 
         UISettingsSection:Button({
-            Name = "Set Token & Refresh",
+            Name = "Set Token",
             Callback = function()
                 local Token = Library.Flags["Settings_SpotifyToken"]
                 if Token and type(Token) == "string" and Token ~= "" then
