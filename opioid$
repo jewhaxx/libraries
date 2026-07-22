@@ -1,5 +1,6 @@
+-- spanish tech
 
--- v1.4
+--- this library is highlgy "inspired" by samet and finobe's uis
 
 local LoadingTick = os.clock()
 
@@ -1329,7 +1330,14 @@ local Library do
                 if type(Value) == "table" and Value.Key then
                     Config[Index] = {Key = tostring(Value.Key), Mode = Value.Mode}
                 elseif type(Value) == "table" and Value.Color then
-                    Config[Index] = {Color = "#" .. Value.HexValue, Alpha = Value.Alpha}
+                    local ColorVal = Value.Color
+                    local Hex
+                    if type(ColorVal) == "string" then
+                        Hex = ColorVal
+                    elseif typeof(ColorVal) == "Color3" then
+                        Hex = ColorVal:ToHex()
+                    end
+                    Config[Index] = {Color = "#" .. (Hex or "ffffff"), Alpha = Value.Alpha}
                 else
                     Config[Index] = Value
                 end
@@ -6964,6 +6972,8 @@ local Library do
             SelectedEntryLabel = nil
         end
 
+        local Explorer_Refresh
+
         local function Explorer_BuildEntries()
             Explorer_ClearEntries()
 
@@ -7226,7 +7236,7 @@ local Library do
             end
         })
 
-        local function Explorer_Refresh()
+        Explorer_Refresh = function()
             SelectedConfigPath = nil
             SelectedConfigName = nil
             Explorer_BuildEntries()
