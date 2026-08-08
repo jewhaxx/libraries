@@ -1,6 +1,7 @@
+
 -- spanish tech
 
---- this library is highlgy "inspired" by samet and finobe's uis
+-- highly skidded from samet
 
 local LoadingTick = os.clock()
 
@@ -108,6 +109,7 @@ local Library do
             ["Resize"] = { "Resize.png", "https://github.com/sametexe001/images/blob/main/resize.png?raw=true" },
             ["Clipboard"] = { "Clipboard.png", "https://media.discordapp.net/attachments/1511026013168205997/1522311793903534110/GbECNgAAAAZJREFUAwAeC8TTur01BwAAAABJRU5ErkJggg.png?ex=6a4802d6&is=6a46b156&hm=f39f0f207cd47c1e8e6ee57cfa7b00beedd5dfba7563911a70dc9634626e0cd0&=&format=webp&quality=lossless&width=1024&height=1024" },
             ["Folder"] = { "Folder.png", "https://img.icons8.com/?size=100&id=2yO6UjBrwe5F&format=png&color=FFFFFF" },
+            ["Settings"] = { "Settings.png", "https://github.com/jewhaxx/libraries/blob/main/assets/settings.png?raw=true" },
         },
 
         Pages = { },
@@ -1467,6 +1469,59 @@ local Library do
         TableInsert(Library.AnimatedGradients, GradientData)
 
         return StrokeGradient
+    end
+
+    Library.ApplyClickGradient = function(self, ButtonInstance)
+        if not ButtonInstance then return end
+
+        for _, Child in ButtonInstance:GetChildren() do
+            if Child.Name == "ClickGradient" and Child:IsA("UIStroke") then
+                Child:Destroy()
+            end
+        end
+
+        local Stroke = InstanceNew("UIStroke")
+        Stroke.Name = "ClickGradient"
+        Stroke.Thickness = 3
+        Stroke.Transparency = 0
+        Stroke.LineJoinMode = Enum.LineJoinMode.Miter
+        Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        Stroke.Color = Library.Theme.Accent
+        Stroke.Parent = ButtonInstance
+
+        local StrokeGradient = InstanceNew("UIGradient")
+        StrokeGradient.Name = "\0"
+        StrokeGradient.Rotation = 0
+        StrokeGradient.Color = RGBSequence{
+            RGBSequenceKeypoint(0, Library.Theme.Accent),
+            RGBSequenceKeypoint(0.5, Library.Theme.Accent),
+            RGBSequenceKeypoint(1, Library.Theme.Accent)
+        }
+        StrokeGradient.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 1),
+            NumberSequenceKeypoint.new(0.4, 1),
+            NumberSequenceKeypoint.new(0.5, 0),
+            NumberSequenceKeypoint.new(0.6, 1),
+            NumberSequenceKeypoint.new(1, 1)
+        })
+        StrokeGradient.Parent = Stroke
+
+        local GradientData = {
+            Gradient = StrokeGradient,
+            Angle = 0
+        }
+        TableInsert(Library.AnimatedGradients, GradientData)
+
+        task.delay(1, function()
+            local FadeTween = TweenService:Create(Stroke, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Transparency = 1})
+            FadeTween:Play()
+            FadeTween.Completed:Wait()
+            local Index = TableFind(Library.AnimatedGradients, GradientData)
+            if Index then
+                TableRemove(Library.AnimatedGradients, Index)
+            end
+            Stroke:Destroy()
+        end)
     end
 
     task.spawn(function()
@@ -8817,6 +8872,7 @@ local Library do
                 end
 
                 function NewButton:Press()
+                    Library:ApplyClickGradient(SubItems["NewButton"].Instance)
                     SubItems["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
                     SubItems["NewButton"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
                     SubItems["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent})
@@ -12083,6 +12139,8 @@ local Library do
         function Button:Press()
             Library:SafeCall(Button.Callback)
 
+            Library:ApplyClickGradient(Items["Button"].Instance)
+
             Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
             Items["Button"]:ChangeItemTheme({BackgroundColor3 = "Accent"})
 
@@ -14098,7 +14156,489 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255),
                 ZIndex = 3
             })
+
+            Items["SettingsButton"] = Instances:Create("TextButton", {
+                Parent = Items["RigFrame"].Instance,
+                Name = "\0",
+                AutoButtonColor = false,
+                BackgroundTransparency = 1,
+                AnchorPoint = Vector2New(1, 0),
+                Position = UDim2New(1, -3, 0, 2),
+                Size = UDim2New(0, 14, 0, 14),
+                ZIndex = 5,
+                Text = "",
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Items["SettingsIcon"] = Instances:Create("ImageLabel", {
+                Parent = Items["SettingsButton"].Instance,
+                Name = "\0",
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 1, 0),
+                Position = UDim2New(0, 0, 0, 0),
+                Image = Library:GetImage("Settings") or "",
+                ImageColor3 = FromRGB(140, 140, 148),
+                BorderSizePixel = 0,
+                Transparency = .3
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+            Items["SettingsIcon"]:AddToTheme({ ImageColor3 = "Text" })
+
+            Items["SettingsWindow"] = Instances:Create("TextButton", {
+                Parent = Library.UnusedHolder.Instance,
+                Name = "\0",
+                Text = "",
+                AutoButtonColor = false,
+                Visible = false,
+                Position = UDim2New(0, 12, 0, 12),
+                BorderColor3 = FromRGB(12, 12, 16),
+                Size = UDim2New(0, 200, 0, 200),
+                BorderSizePixel = 2,
+                BackgroundColor3 = FromRGB(20, 20, 25)
+            })
+            Items["SettingsWindow"]:AddToTheme({ BorderColor3 = "Border", BackgroundColor3 = "Background" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["SettingsWindow"].Instance,
+                Name = "\0",
+                Color = FromRGB(27, 27, 32),
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            }):AddToTheme({ Color = "Outline" })
+
+            Items["SettingsAccent"] = Instances:Create("Frame", {
+                Parent = Items["SettingsWindow"].Instance,
+                Name = "\0",
+                BorderColor3 = FromRGB(0, 0, 0),
+                Size = UDim2New(1, 0, 0, 2),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(167, 139, 250)
+            })
+            Items["SettingsAccent"]:AddToTheme({ BackgroundColor3 = "Accent" })
+
+            Instances:Create("UIGradient", {
+                Parent = Items["SettingsAccent"].Instance,
+                Name = "\0",
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
+            })
+
+            Items["SettingsContent"] = Instances:Create("ScrollingFrame", {
+                Parent = Items["SettingsWindow"].Instance,
+                Name = "\0",
+                BackgroundTransparency = 1,
+                Position = UDim2New(0, 0, 0, 4),
+                Size = UDim2New(1, 0, 1, -4),
+                BorderSizePixel = 0,
+                ScrollBarThickness = 2,
+                ScrollBarImageColor3 = FromRGB(50, 50, 60),
+                CanvasSize = UDim2New(0, 0, 0, 0),
+                AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                ScrollingDirection = Enum.ScrollingDirection.Y,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Instances:Create("UIPadding", {
+                Parent = Items["SettingsContent"].Instance,
+                Name = "\0",
+                PaddingTop = UDimNew(0, 4),
+                PaddingBottom = UDimNew(0, 4),
+                PaddingLeft = UDimNew(0, 6),
+                PaddingRight = UDimNew(0, 6)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["SettingsContent"].Instance,
+                Name = "\0",
+                Padding = UDimNew(0, 4),
+                SortOrder = Enum.SortOrder.LayoutOrder
+            })
         end
+
+        local SettingsState = {
+            Random = false,
+            RandomPercents = { },
+        }
+
+        local SettingsIsOpen = false
+        local SettingsDebounce = false
+
+        local function OpenSettings(Bool)
+            if SettingsDebounce then return end
+            SettingsIsOpen = Bool
+            SettingsDebounce = true
+
+            if SettingsIsOpen then
+                Items["SettingsWindow"].Instance.Visible = true
+                Items["SettingsWindow"].Instance.Parent = Library.Holder.Instance
+                Library:BringToFront(Items["SettingsWindow"].Instance)
+
+                local BtnPos = Items["SettingsButton"].Instance.AbsolutePosition
+                local BtnSize = Items["SettingsButton"].Instance.AbsoluteSize
+                local WinSize = Items["SettingsWindow"].Instance.AbsoluteSize
+                local Viewport = Camera.ViewportSize
+
+                local PosX = BtnPos.X - WinSize.X + BtnSize.X
+                local PosY = BtnPos.Y + BtnSize.Y + 5
+
+                if PosX < 5 then PosX = 5 end
+                if PosY + WinSize.Y > Viewport.Y then
+                    PosY = BtnPos.Y - WinSize.Y - 5
+                end
+
+                Items["SettingsWindow"].Instance.Position = UDim2New(0, PosX, 0, PosY)
+            else
+                Items["SettingsWindow"].Instance.Visible = false
+                Items["SettingsWindow"].Instance.Parent = Library.UnusedHolder.Instance
+            end
+
+            task.delay(0.1, function()
+                SettingsDebounce = false
+            end)
+        end
+
+        local SettingsItems = { }
+
+        local SliderParts = { }
+        for _, PartName in Parts do
+            TableInsert(SliderParts, PartName)
+        end
+
+        local MaxWindowHeight = 300
+
+        local WindowHeight = 2 + 8 + 12 + 16 + 8
+        Items["SettingsWindow"].Instance.Size = UDim2New(0, 200, 0, WindowHeight)
+
+        local UpdatePartVisual
+        local UpdateAllPartsVisual
+
+        local function UpdateWindowSize()
+            local H = 2 + 8 + 12 + 16 + 8
+            if SettingsState.Random then
+                H = 2 + 8 + 12 + 16 + 4 + (#SliderParts * (27 + 4)) + 8
+            end
+            if H > MaxWindowHeight then
+                H = MaxWindowHeight
+            end
+            Items["SettingsWindow"].Instance.Size = UDim2New(0, 200, 0, H)
+        end
+
+        do
+            local ToggleFrame = Instances:Create("TextButton", {
+                Parent = Items["SettingsContent"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(0, 0, 0),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = "",
+                AutoButtonColor = false,
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 16),
+                BorderSizePixel = 0,
+                TextSize = 14,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            local ToggleIndicator = Instances:Create("Frame", {
+                Parent = ToggleFrame.Instance,
+                Name = "\0",
+                BorderColor3 = FromRGB(10, 10, 10),
+                Size = UDim2New(0, 10, 0, 10),
+                AnchorPoint = Vector2New(0, 0.5),
+                Position = UDim2New(0, 0, 0.5, 0),
+                BorderSizePixel = 2,
+                BackgroundColor3 = FromRGB(33, 33, 36)
+            })
+            ToggleIndicator:AddToTheme({ BackgroundColor3 = "Element", BorderColor3 = "Border" })
+
+            Instances:Create("UIStroke", {
+                Parent = ToggleIndicator.Instance,
+                Name = "\0",
+                Color = FromRGB(27, 27, 32),
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            }):AddToTheme({ Color = "Outline" })
+
+            Instances:Create("UIGradient", {
+                Parent = ToggleIndicator.Instance,
+                Name = "\0",
+                Rotation = 90,
+                Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(100, 100, 100)) }
+            })
+
+            local ToggleText = Instances:Create("TextLabel", {
+                Parent = ToggleFrame.Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(200, 200, 208),
+                TextTransparency = 0.48,
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = "Random",
+                Size = UDim2New(1, -18, 1, 0),
+                Position = UDim2New(0, 18, 0, 0),
+                BackgroundTransparency = 1,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextYAlignment = Enum.TextYAlignment.Center,
+                BorderSizePixel = 0,
+                TextSize = 12,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+            ToggleText:AddToTheme({ TextColor3 = "Text" })
+
+            Instances:Create("UIStroke", {
+                Parent = ToggleText.Instance,
+                Name = "\0",
+                LineJoinMode = Enum.LineJoinMode.Miter
+            }):AddToTheme({ Color = "Text Border" })
+
+            local RandomValue = false
+
+            local function SetRandom(Bool)
+                RandomValue = Bool
+                Library.Flags[BodyPartBox.Flag .. "_random"] = Bool
+
+                if Bool then
+                    ToggleIndicator:ChangeItemTheme({ BackgroundColor3 = "Accent" })
+                    ToggleIndicator:Tween(nil, { BackgroundColor3 = Library.Theme.Accent })
+                    ToggleText:Tween(nil, { TextTransparency = 0 })
+
+                    for Part, _ in BodyPartBox.Selected do
+                        BodyPartBox.Selected[Part] = nil
+                    end
+                    local SelectedList = { }
+                    Library.Flags[BodyPartBox.Flag] = SelectedList
+                    Library:SafeCall(BodyPartBox.Callback, SelectedList)
+                else
+                    ToggleIndicator:ChangeItemTheme({ BackgroundColor3 = "Element" })
+                    ToggleIndicator:Tween(nil, { BackgroundColor3 = Library.Theme.Element })
+                    ToggleText:Tween(nil, { TextTransparency = 0.48 })
+                end
+
+                SettingsState.Random = Bool
+                for _, SliderFrame in SettingsItems.Sliders or { } do
+                    SliderFrame.Instance.Visible = Bool
+                end
+                UpdateWindowSize()
+                UpdateAllPartsVisual()
+            end
+
+            ToggleFrame:Connect("MouseButton1Down", function()
+                SetRandom(not RandomValue)
+            end)
+
+            ToggleFrame:OnHover(function()
+                if not RandomValue then
+                    ToggleIndicator:ChangeItemTheme({ BackgroundColor3 = "Hovered Element", BorderColor3 = "Border" })
+                    ToggleIndicator:Tween(nil, { BackgroundColor3 = Library.Theme["Hovered Element"] })
+                end
+            end)
+
+            ToggleFrame:OnHoverLeave(function()
+                if not RandomValue then
+                    ToggleIndicator:ChangeItemTheme({ BackgroundColor3 = "Element", BorderColor3 = "Border" })
+                    ToggleIndicator:Tween(nil, { BackgroundColor3 = Library.Theme.Element })
+                end
+            end)
+
+            SettingsItems.Sliders = { }
+
+            for _, PartName in SliderParts do
+                local SliderFrame = Instances:Create("Frame", {
+                    Parent = Items["SettingsContent"].Instance,
+                    Name = "\0",
+                    BackgroundTransparency = 1,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Size = UDim2New(1, 0, 0, 27),
+                    Visible = false,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+
+                local SliderText = Instances:Create("TextLabel", {
+                    Parent = SliderFrame.Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = PartName,
+                    BackgroundTransparency = 1,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Size = UDim2New(1, 0, 0, 13),
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+                SliderText:AddToTheme({ TextColor3 = "Text" })
+
+                Instances:Create("UIStroke", {
+                    Parent = SliderText.Instance,
+                    Name = "\0",
+                    LineJoinMode = Enum.LineJoinMode.Miter
+                }):AddToTheme({ Color = "Text Border" })
+
+                local RealSlider = Instances:Create("TextButton", {
+                    Parent = SliderFrame.Instance,
+                    Name = "\0",
+                    AnchorPoint = Vector2New(0, 1),
+                    Position = UDim2New(0, 0, 1, 0),
+                    AutoButtonColor = false,
+                    Text = "",
+                    BorderColor3 = FromRGB(10, 10, 10),
+                    Size = UDim2New(1, 0, 0, 10),
+                    BorderSizePixel = 2,
+                    BackgroundColor3 = FromRGB(33, 33, 36)
+                })
+                RealSlider:AddToTheme({ BackgroundColor3 = "Background", BorderColor3 = "Border" })
+
+                Instances:Create("UIGradient", {
+                    Parent = RealSlider.Instance,
+                    Name = "\0",
+                    Rotation = 90,
+                    Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(100, 100, 100)) }
+                })
+
+                Instances:Create("UIStroke", {
+                    Parent = RealSlider.Instance,
+                    Name = "\0",
+                    Color = FromRGB(27, 27, 32),
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({ Color = "Outline" })
+
+                local Indicator = Instances:Create("Frame", {
+                    Parent = RealSlider.Instance,
+                    Name = "\0",
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Size = UDim2New(0.5, 0, 1, 0),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(167, 139, 250)
+                })
+                Indicator:AddToTheme({ BackgroundColor3 = "Accent" })
+
+                Instances:Create("UIGradient", {
+                    Parent = Indicator.Instance,
+                    Name = "\0",
+                    Rotation = 90,
+                    Color = RGBSequence{ RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(100, 100, 100)) }
+                })
+
+                local ValueLabel = Instances:Create("TextLabel", {
+                    Parent = RealSlider.Instance,
+                    Name = "\0",
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Text = "50%",
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0, 0, 0, -1),
+                    Size = UDim2New(1, 0, 1, 0),
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })
+                ValueLabel:AddToTheme({ TextColor3 = "Text" })
+
+                Instances:Create("UIStroke", {
+                    Parent = ValueLabel.Instance,
+                    Name = "\0",
+                    LineJoinMode = Enum.LineJoinMode.Miter
+                }):AddToTheme({ Color = "Text Border" })
+
+                local SliderValue = 50
+                local Sliding = false
+
+                local function SetValue(V)
+                    SliderValue = Library:Round(MathClamp(V, 0, 100), 1)
+                    Library.Flags[BodyPartBox.Flag .. "_random_" .. PartName] = SliderValue
+                    Indicator:Tween(CachedQuartTweenInfo, { Size = UDim2New(SliderValue / 100, 0, 1, 0) })
+                    ValueLabel.Instance.Text = StringFormat("%s%%", tostring(SliderValue))
+                    SettingsState.RandomPercents[PartName] = SliderValue
+                    if UpdatePartVisual then
+                        UpdatePartVisual(PartName, BodyPartBox.Selected[PartName])
+                    end
+                end
+
+                RealSlider:Connect("InputBegan", function(Input)
+                    if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+                        Sliding = true
+                        local SizeX = (Mouse.X - RealSlider.Instance.AbsolutePosition.X) / RealSlider.Instance.AbsoluteSize.X
+                        SetValue(SizeX * 100)
+
+                        local InputChanged = Input.Changed:Connect(function()
+                            if Input.UserInputState == Enum.UserInputState.End then
+                                Sliding = false
+                                InputChanged:Disconnect()
+                            end
+                        end)
+                    end
+                end)
+
+                Library:Connect(UserInputService.InputChanged, function(Input)
+                    if (Input.UserInputType == Enum.UserInputType.MouseMovement or Input.UserInputType == Enum.UserInputType.Touch) and Sliding then
+                        local SizeX = (Mouse.X - RealSlider.Instance.AbsolutePosition.X) / RealSlider.Instance.AbsoluteSize.X
+                        SetValue(SizeX * 100)
+                    end
+                end)
+
+                SliderFrame:OnHover(function()
+                    RealSlider:ChangeItemTheme({ BackgroundColor3 = "Hovered Element", BorderColor3 = "Border" })
+                    RealSlider:Tween(nil, { BackgroundColor3 = Library.Theme["Hovered Element"] })
+                end)
+
+                SliderFrame:OnHoverLeave(function()
+                    RealSlider:ChangeItemTheme({ BackgroundColor3 = "Background", BorderColor3 = "Border" })
+                    RealSlider:Tween(nil, { BackgroundColor3 = Library.Theme.Background })
+                end)
+
+                SetValue(50)
+                SettingsItems.Sliders[PartName] = SliderFrame
+            end
+        end
+
+        local JustOpened = false
+
+        Items["SettingsButton"]:Connect("MouseButton1Down", function()
+            JustOpened = true
+            OpenSettings(not SettingsIsOpen)
+            task.delay(0.15, function()
+                JustOpened = false
+            end)
+        end)
+
+        Items["SettingsButton"]:OnHover(function()
+            Items["SettingsIcon"]:Tween(nil, { ImageColor3 = Library.Theme.Accent })
+        end)
+
+        Items["SettingsButton"]:OnHoverLeave(function()
+            Items["SettingsIcon"]:Tween(nil, { ImageColor3 = Library.Theme.Text })
+        end)
+
+        Library:Connect(UserInputService.InputBegan, function(Input)
+            if SettingsIsOpen and not JustOpened and Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                local MousePos = Vector2New(Mouse.X, Mouse.Y)
+                local WinPos = Items["SettingsWindow"].Instance.AbsolutePosition
+                local WinSize = Items["SettingsWindow"].Instance.AbsoluteSize
+                local BtnPos = Items["SettingsButton"].Instance.AbsolutePosition
+                local BtnSize = Items["SettingsButton"].Instance.AbsoluteSize
+
+                local InWindow = MousePos.X >= WinPos.X and MousePos.X <= WinPos.X + WinSize.X
+                    and MousePos.Y >= WinPos.Y and MousePos.Y <= WinPos.Y + WinSize.Y
+                local InButton = MousePos.X >= BtnPos.X and MousePos.X <= BtnPos.X + BtnSize.X
+                    and MousePos.Y >= BtnPos.Y and MousePos.Y <= BtnPos.Y + BtnSize.Y
+
+                if not InWindow and not InButton then
+                    OpenSettings(false)
+                end
+            end
+        end)
+
+        BodyPartBox.Settings = SettingsState
 
         local RigContainer = Items["RigContainer"].Instance
 
@@ -14176,13 +14716,13 @@ local Library do
                 end)
 
                 Frame:OnHover(function()
-                    if not BodyPartBox.Selected[PartName] then
+                    if not BodyPartBox.Selected[PartName] and not SettingsState.Random then
                         Frame:Tween(CachedHoverTweenInfo, { BackgroundColor3 = Library.Theme["Hovered Element"] })
                     end
                 end)
 
                 Frame:OnHoverLeave(function()
-                    if not BodyPartBox.Selected[PartName] then
+                    if not BodyPartBox.Selected[PartName] and not SettingsState.Random then
                         Frame:Tween(CachedHoverTweenInfo, { BackgroundColor3 = Library.Theme.Element })
                     end
                 end)
@@ -14195,20 +14735,33 @@ local Library do
             end
         end
 
-        local UpdatePartVisual = function(PartName, Selected)
+        UpdatePartVisual = function(PartName, Selected)
             local Frame = PartFrames[PartName]
             if not Frame then return end
 
-            if Selected then
-                Frame:Tween(CachedQuartTweenInfo, { BackgroundColor3 = Library.Theme.Accent })
+            if SettingsState.Random then
+                local Chance = SettingsState.RandomPercents[PartName] or 0
+                local Alpha = Chance / 100
+                Frame:Tween(CachedQuartTweenInfo, { BackgroundColor3 = Library.Theme.Accent, BackgroundTransparency = 1 - Alpha })
+                Frame:ChangeItemTheme({ BackgroundColor3 = "Accent" })
+            elseif Selected then
+                Frame:Tween(CachedQuartTweenInfo, { BackgroundColor3 = Library.Theme.Accent, BackgroundTransparency = 0 })
                 Frame:ChangeItemTheme({ BackgroundColor3 = "Accent" })
             else
-                Frame:Tween(CachedQuartTweenInfo, { BackgroundColor3 = Library.Theme.Element })
+                Frame:Tween(CachedQuartTweenInfo, { BackgroundColor3 = Library.Theme.Element, BackgroundTransparency = 0 })
                 Frame:ChangeItemTheme({ BackgroundColor3 = "Element" })
             end
         end
 
+        UpdateAllPartsVisual = function()
+            for PartName, Frame in PartFrames do
+                UpdatePartVisual(PartName, BodyPartBox.Selected[PartName])
+            end
+        end
+
         function BodyPartBox:TogglePart(PartName)
+            if SettingsState.Random then return end
+
             if self.Selected[PartName] then
                 self.Selected[PartName] = nil
                 UpdatePartVisual(PartName, false)
