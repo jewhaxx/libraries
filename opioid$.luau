@@ -1,7 +1,5 @@
 
--- spanish tech
-
--- highly skidded from samet
+--
 
 local LoadingTick = os.clock()
 
@@ -110,6 +108,7 @@ local Library do
             ["Clipboard"] = { "Clipboard.png", "https://media.discordapp.net/attachments/1511026013168205997/1522311793903534110/GbECNgAAAAZJREFUAwAeC8TTur01BwAAAABJRU5ErkJggg.png?ex=6a4802d6&is=6a46b156&hm=f39f0f207cd47c1e8e6ee57cfa7b00beedd5dfba7563911a70dc9634626e0cd0&=&format=webp&quality=lossless&width=1024&height=1024" },
             ["Folder"] = { "Folder.png", "https://img.icons8.com/?size=100&id=2yO6UjBrwe5F&format=png&color=FFFFFF" },
             ["Settings"] = { "Settings.png", "https://github.com/jewhaxx/libraries/blob/main/assets/settings.png?raw=true" },
+            ["Search"] = { "Search.png", "https://github.com/jewhaxx/libraries/blob/main/assets/search.png?raw=true" },
         },
 
         Pages = { },
@@ -10344,6 +10343,7 @@ local Library do
 
             Pages = { },
             SubPages = { },
+            Features = { },
             Elements = { },
 
             IsOpen = true
@@ -10452,13 +10452,74 @@ local Library do
                 Name = "\0"
             }):AddToTheme({Color = "Border"})
 
+            Items["SearchContainer"] = Instances:Create("Frame", {
+                Parent = Items["Inline"].Instance,
+                Name = "\0",
+                Position = UDim2New(0, 7, 0, 7),
+                BorderColor3 = FromRGB(10, 10, 10),
+                Size = UDim2New(0, 110, 0, 22),
+                BorderSizePixel = 2,
+                BackgroundColor3 = FromRGB(30, 30, 35)
+            })  Items["SearchContainer"]:AddToTheme({BackgroundColor3 = "Page Background", BorderColor3 = "Border"})
+
+            Instances:Create("UIStroke", {
+                Parent = Items["SearchContainer"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                Color = Library.Theme.Outline,
+                Name = "\0"
+            }):AddToTheme({Color = "Outline"})
+
+            Instances:Create("UIGradient", {
+                Parent = Items["SearchContainer"].Instance,
+                Rotation = 0,
+                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(108, 108, 108))}
+            })
+
+            Items["SearchIcon"] = Instances:Create("ImageLabel", {
+                Parent = Items["SearchContainer"].Instance,
+                Name = "\0",
+                BackgroundTransparency = 1,
+                Position = UDim2New(0, 6, 0.5, 0),
+                AnchorPoint = Vector2New(0, 0.5),
+                Size = UDim2New(0, 11, 0, 11),
+                Image = Library:GetImage("Search") or "https://github.com/jewhaxx/libraries/blob/main/assets/search.png?raw=true",
+                ImageColor3 = FromRGB(215, 215, 215),
+                ImageTransparency = 0.45,
+                ScaleType = Enum.ScaleType.Fit,
+                BorderSizePixel = 0
+            })  Items["SearchIcon"]:AddToTheme({ImageColor3 = "Text"})
+
+            Items["SearchInput"] = Instances:Create("TextBox", {
+                Parent = Items["SearchContainer"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                BackgroundTransparency = 1,
+                Position = UDim2New(0, 22, 0, 0),
+                Size = UDim2New(1, -26, 1, 0),
+                BorderSizePixel = 0,
+                ClearTextOnFocus = false,
+                Text = "",
+                PlaceholderText = "Search...",
+                PlaceholderColor3 = FromRGB(130, 130, 140),
+                TextColor3 = FromRGB(215, 215, 215),
+                TextSize = 11,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })  Items["SearchInput"]:AddToTheme({TextColor3 = "Text"})
+
+            Instances:Create("UIStroke", {
+                Parent = Items["SearchInput"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0"
+            }):AddToTheme({Color = "Text Border"})
+
             Items["Pages"] = Instances:Create("Frame", {
                 Parent = Items["Inline"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
-                Position = UDim2New(0, 7, 0, 7),
+                Position = UDim2New(0, 7, 0, 35),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(0, 110, 1, -14),
+                Size = UDim2New(0, 110, 1, -42),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
@@ -10488,6 +10549,49 @@ local Library do
                 Color = Library.Theme.Outline,
                 Name = "\0"
             }):AddToTheme({Color = "Outline"})
+
+            Items["SearchResults"] = Instances:Create("Frame", {
+                Parent = Items["Content"].Instance,
+                BackgroundTransparency = 1,
+                Name = "\0",
+                BorderColor3 = FromRGB(0, 0, 0),
+                Size = UDim2New(1, 0, 1, 0),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255),
+                Visible = false
+            })
+
+            Items["SearchScroll"] = Instances:Create("ScrollingFrame", {
+                Parent = Items["SearchResults"].Instance,
+                ScrollBarImageColor3 = FromRGB(235, 157, 255),
+                Active = true,
+                AutomaticCanvasSize = Enum.AutomaticSize.Y,
+                ScrollBarThickness = 1,
+                Name = "\0",
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 1, 0),
+                BackgroundColor3 = FromRGB(255, 255, 255),
+                BorderColor3 = FromRGB(0, 0, 0),
+                BorderSizePixel = 0,
+                BottomImage = Library:GetImage("Scrollbar"),
+                MidImage = Library:GetImage("Scrollbar"),
+                TopImage = Library:GetImage("Scrollbar"),
+                CanvasSize = UDim2New(0, 0, 0, 0)
+            })  Items["SearchScroll"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
+
+            Instances:Create("UIPadding", {
+                Parent = Items["SearchScroll"].Instance,
+                PaddingTop = UDimNew(0, 6),
+                PaddingBottom = UDimNew(0, 6),
+                PaddingRight = UDimNew(0, 6),
+                PaddingLeft = UDimNew(0, 6)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["SearchScroll"].Instance,
+                Padding = UDimNew(0, 6),
+                SortOrder = Enum.SortOrder.LayoutOrder
+            })
         end
 
         function Window:SetOpen(Bool)
@@ -10500,6 +10604,298 @@ local Library do
             local Frame = Items["MainFrame"].Instance
             Frame.Visible = Bool
         end
+
+        function Window:Search(Query)
+            for _, Child in Items["SearchScroll"].Instance:GetChildren() do
+                if not Child:IsA("UIListLayout") and not Child:IsA("UIPadding") then
+                    Child:Destroy()
+                end
+            end
+
+            if not Query or Query == "" or StringGSub(Query, "%s+", "") == "" then
+                Items["SearchResults"].Instance.Visible = false
+                for _, P in Window.Pages do
+                    if P.Active then
+                        P.Elements["Page"].Instance.Visible = true
+                    end
+                end
+                return
+            end
+
+            for _, P in Window.Pages do
+                P.Elements["Page"].Instance.Visible = false
+            end
+            Items["SearchResults"].Instance.Visible = true
+
+            local CleanQuery = string.lower(Query)
+            local Matches = { }
+            local Seen = { }
+
+            for _, Feature in Window.Features do
+                local FeatureName = string.lower(Feature.Name or "")
+                local SectionName = string.lower(Feature.Section and Feature.Section.Name or "")
+                local PageName = string.lower(Feature.Page and Feature.Page.Name or "")
+                local FlagName = Feature.Flag and string.lower(tostring(Feature.Flag)) or ""
+
+                if StringFind(FeatureName, CleanQuery, 1, true)
+                    or StringFind(SectionName, CleanQuery, 1, true)
+                    or StringFind(PageName, CleanQuery, 1, true)
+                    or (FlagName ~= "" and StringFind(FlagName, CleanQuery, 1, true)) then
+                    if not Seen[Feature] then
+                        Seen[Feature] = true
+                        TableInsert(Matches, Feature)
+                    end
+                end
+            end
+
+            if #Matches == 0 then
+                local EmptyFrame = Instances:Create("Frame", {
+                    Parent = Items["SearchScroll"].Instance,
+                    Name = "\0",
+                    Size = UDim2New(1, 0, 0, 36),
+                    BorderColor3 = FromRGB(27, 27, 32),
+                    BorderSizePixel = 2,
+                    BackgroundColor3 = FromRGB(20, 20, 25)
+                })  EmptyFrame:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
+
+                Instances:Create("UIStroke", {
+                    Parent = EmptyFrame.Instance,
+                    Color = FromRGB(10, 10, 10),
+                    Name = "\0",
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Border"})
+
+                local EmptyLabel = Instances:Create("TextLabel", {
+                    Parent = EmptyFrame.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    TextTransparency = 0.5,
+                    Text = StringFormat("No features found matching \"%s\"", Query),
+                    Name = "\0",
+                    Size = UDim2New(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    TextSize = 12,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  EmptyLabel:AddToTheme({TextColor3 = "Text"})
+
+                Instances:Create("UIStroke", {
+                    Parent = EmptyLabel.Instance,
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                    Name = "\0"
+                }):AddToTheme({Color = "Text Border"})
+
+                return
+            end
+
+            for _, Feature in Matches do
+                local ResultButton = Instances:Create("TextButton", {
+                    Parent = Items["SearchScroll"].Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(0, 0, 0),
+                    BorderColor3 = FromRGB(27, 27, 32),
+                    Text = "",
+                    AutoButtonColor = false,
+                    Name = "\0",
+                    Size = UDim2New(1, 0, 0, 38),
+                    BorderSizePixel = 2,
+                    TextSize = 14,
+                    BackgroundColor3 = FromRGB(20, 20, 25)
+                })  ResultButton:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
+
+                Instances:Create("UIStroke", {
+                    Parent = ResultButton.Instance,
+                    Color = FromRGB(10, 10, 10),
+                    Name = "\0",
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Border"})
+
+                local AccentLine = Instances:Create("Frame", {
+                    Parent = ResultButton.Instance,
+                    Name = "\0",
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Size = UDim2New(0, 2, 1, 0),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(235, 157, 255)
+                })  AccentLine:AddToTheme({BackgroundColor3 = "Accent"})
+
+                Instances:Create("UIGradient", {
+                    Parent = AccentLine.Instance,
+                    Rotation = 90,
+                    Transparency = NumberSequence.new({
+                        NumberSequenceKeypoint.new(0, 1),
+                        NumberSequenceKeypoint.new(0.25, 0),
+                        NumberSequenceKeypoint.new(0.75, 0),
+                        NumberSequenceKeypoint.new(1, 1)
+                    })
+                })
+
+                local Breadcrumb = (Feature.Page and Feature.Page.Name or "Tab") .. " > " .. (Feature.Section and Feature.Section.Name or "Section")
+
+                local BreadcrumbLabel = Instances:Create("TextLabel", {
+                    Parent = ResultButton.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(167, 139, 250),
+                    Text = Breadcrumb,
+                    Name = "\0",
+                    Size = UDim2New(1, -76, 0, 13),
+                    Position = UDim2New(0, 8, 0, 4),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextTruncate = Enum.TextTruncate.AtEnd,
+                    TextSize = 11,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  BreadcrumbLabel:AddToTheme({TextColor3 = "Accent"})
+
+                Instances:Create("UIStroke", {
+                    Parent = BreadcrumbLabel.Instance,
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                    Name = "\0"
+                }):AddToTheme({Color = "Text Border"})
+
+                local FeatureLabel = Instances:Create("TextLabel", {
+                    Parent = ResultButton.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    Text = Feature.Name,
+                    Name = "\0",
+                    Size = UDim2New(1, -76, 0, 15),
+                    Position = UDim2New(0, 8, 0, 18),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    TextTruncate = Enum.TextTruncate.AtEnd,
+                    TextSize = 12,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  FeatureLabel:AddToTheme({TextColor3 = "Text"})
+
+                Instances:Create("UIStroke", {
+                    Parent = FeatureLabel.Instance,
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                    Name = "\0"
+                }):AddToTheme({Color = "Text Border"})
+
+                local TypeBadge = Instances:Create("Frame", {
+                    Parent = ResultButton.Instance,
+                    AnchorPoint = Vector2New(1, 0.5),
+                    Name = "\0",
+                    Position = UDim2New(1, -8, 0.5, 0),
+                    Size = UDim2New(0, 56, 0, 18),
+                    BorderSizePixel = 2,
+                    BorderColor3 = FromRGB(10, 10, 10),
+                    BackgroundColor3 = FromRGB(30, 30, 35)
+                })  TypeBadge:AddToTheme({BackgroundColor3 = "Page Background", BorderColor3 = "Border"})
+
+                Instances:Create("UIStroke", {
+                    Parent = TypeBadge.Instance,
+                    Color = FromRGB(27, 27, 32),
+                    Name = "\0",
+                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                }):AddToTheme({Color = "Outline"})
+
+                local TypeLabel = Instances:Create("TextLabel", {
+                    Parent = TypeBadge.Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    TextTransparency = 0.35,
+                    Text = Feature.Type,
+                    Name = "\0",
+                    Size = UDim2New(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    BorderSizePixel = 0,
+                    TextSize = 10,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  TypeLabel:AddToTheme({TextColor3 = "Text"})
+
+                Instances:Create("UIStroke", {
+                    Parent = TypeLabel.Instance,
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                    Name = "\0"
+                }):AddToTheme({Color = "Text Border"})
+
+                ResultButton:OnHover(function()
+                    ResultButton:Tween(CachedHoverTweenInfo, {BackgroundColor3 = Library.Theme["Hovered Element"]})
+                    ResultButton:ChangeItemTheme({BackgroundColor3 = "Hovered Element", BorderColor3 = "Border"})
+                end)
+
+                ResultButton:OnHoverLeave(function()
+                    ResultButton:Tween(CachedHoverTweenInfo, {BackgroundColor3 = Library.Theme["Inline"]})
+                    ResultButton:ChangeItemTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
+                end)
+
+                ResultButton:Connect("MouseButton1Down", function()
+                    if Feature.Page then
+                        for _, P in Window.Pages do
+                            P:Turn(P == Feature.Page)
+                        end
+                    end
+                    if Feature.Section and Feature.Section.Collapsible and Feature.Section.Collapsed then
+                        Feature.Section:SetCollapsed(false)
+                    end
+                    Items["SearchInput"].Instance.Text = ""
+                    Window:Search("")
+                    if Feature.Instance then
+                        Library:ApplyClickGradient(Feature.Instance)
+                    end
+                end)
+            end
+        end
+
+        local SearchTick = 0
+        local LastSearchText = ""
+
+        local SearchDebounce = function()
+            SearchTick = SearchTick + 1
+            local CurrentTick = SearchTick
+            task.delay(0.5, function()
+                if SearchTick == CurrentTick then
+                    local CurrentText = Items["SearchInput"].Instance.Text
+                    if CurrentText ~= LastSearchText then
+                        LastSearchText = CurrentText
+                        Window:Search(CurrentText)
+                    end
+                end
+            end)
+        end
+
+        Library:Connect(Items["SearchInput"].Instance:GetPropertyChangedSignal("Text"), function()
+            local CurrentText = Items["SearchInput"].Instance.Text
+            if CurrentText == "" then
+                SearchTick = SearchTick + 1
+                LastSearchText = ""
+                Window:Search("")
+            else
+                SearchDebounce()
+            end
+        end)
+
+        Items["SearchContainer"]:OnHover(function()
+            Items["SearchContainer"]:Tween(CachedHoverTweenInfo, {BackgroundColor3 = Library.Theme["Hovered Element"]})
+            Items["SearchContainer"]:ChangeItemTheme({BackgroundColor3 = "Hovered Element", BorderColor3 = "Border"})
+        end)
+
+        Items["SearchContainer"]:OnHoverLeave(function()
+            Items["SearchContainer"]:Tween(CachedHoverTweenInfo, {BackgroundColor3 = Library.Theme["Page Background"]})
+            Items["SearchContainer"]:ChangeItemTheme({BackgroundColor3 = "Page Background", BorderColor3 = "Border"})
+        end)
+
+        Items["SearchInput"]:Connect("Focused", function()
+            Items["SearchContainer"]:Tween(CachedHoverTweenInfo, {BorderColor3 = Library.Theme.Accent})
+            Items["SearchIcon"]:Tween(CachedHoverTweenInfo, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
+        end)
+
+        Items["SearchInput"]:Connect("FocusLost", function(EnterPressed)
+            Items["SearchContainer"]:Tween(CachedHoverTweenInfo, {BorderColor3 = Library.Theme.Border})
+            Items["SearchIcon"]:Tween(CachedHoverTweenInfo, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.45})
+            if EnterPressed then
+                SearchTick = SearchTick + 1
+                local CurrentText = Items["SearchInput"].Instance.Text
+                LastSearchText = CurrentText
+                Window:Search(CurrentText)
+            end
+        end)
 
         Library:Connect(UserInputService.InputBegan, function(Input)
             local InputKey = tostring(Input.KeyCode)
@@ -11535,6 +11931,26 @@ local Library do
         return setmetatable(Section, Library.Sections)
     end
 
+    Library.Sections.RegisterFeature = function(self, Data)
+        if not self.Window or not self.Window.Features then
+            return
+        end
+
+        local Feature = {
+            Name = Data.Name or "Feature",
+            Type = Data.Type or "Element",
+            Section = self,
+            Page = self.Page,
+            SubPage = self.SubPage,
+            Instance = Data.Instance,
+            Object = Data.Object,
+            Flag = Data.Flag
+        }
+
+        TableInsert(self.Window.Features, Feature)
+        return Feature
+    end
+
     Library.Sections.Divider = function(self)
         local Divider = {
             Window = self.Window,
@@ -11650,7 +12066,7 @@ local Library do
                 TextTransparency = 0.48,
                 Text = Toggle.Risky and ("[!] " .. Toggle.Name) or Toggle.Name,
                 Name = "\0",
-                Size = UDim2New(1, -18, 1, 0),
+                Size = UDim2New(1, -43, 1, 0),
                 Position = UDim2New(0, 18, 0, 0),
                 BackgroundTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
@@ -11784,6 +12200,14 @@ local Library do
             Extension.Tab = self.Tab
             Extension.Section = self.Section
 
+            Toggle.Section:RegisterFeature({
+                Name = Toggle.Name .. " " .. (Data.Name or "Color"),
+                Type = "Colorpicker",
+                Instance = Extension.Items and Extension.Items["ColorpickerButton"] and Extension.Items["ColorpickerButton"].Instance or nil,
+                Object = Colorpicker,
+                Flag = Colorpicker.Flag
+            })
+
             return Extension
         end
 
@@ -11812,6 +12236,14 @@ local Library do
                 Extension.Items["KeyButton"].Instance.Position = UDim2New(0, 0, 0.5, 0)
                 Extension.Items["KeyButton"].Instance.LayoutOrder = 999
             end
+
+            Toggle.Section:RegisterFeature({
+                Name = Toggle.Name .. " " .. (Data.Name or "Keybind"),
+                Type = "Keybind",
+                Instance = Extension.Items and Extension.Items["KeyButton"] and Extension.Items["KeyButton"].Instance or nil,
+                Object = Keybind,
+                Flag = Keybind.Flag
+            })
 
             return Keybind, Extension
         end
@@ -11844,6 +12276,14 @@ local Library do
         if Data.Tooltip or Data.tooltip then
             Library:AddTooltip(Items["Toggle"].Instance, Data.Tooltip or Data.tooltip)
         end
+
+        self:RegisterFeature({
+            Name = Toggle.Name,
+            Type = "Toggle",
+            Instance = Items["Toggle"].Instance,
+            Object = Toggle,
+            Flag = Toggle.Flag
+        })
 
         return Toggle
     end
@@ -12025,6 +12465,15 @@ local Library do
                 end
 
                 Btn.Items = BtnItems
+
+                ButtonGroup.Section:RegisterFeature({
+                    Name = Btn.Name,
+                    Type = "Button",
+                    Instance = BtnItems["Button"].Instance,
+                    Object = Btn,
+                    Flag = Btn.Flag
+                })
+
                 return Btn
             end
 
@@ -12184,6 +12633,14 @@ local Library do
         if Data.Tooltip or Data.tooltip then
             Library:AddTooltip(Items["Button"].Instance, Data.Tooltip or Data.tooltip)
         end
+
+        self:RegisterFeature({
+            Name = Button.Name,
+            Type = "Button",
+            Instance = Items["Button"].Instance,
+            Object = Button,
+            Flag = Button.Flag
+        })
 
         return Button
     end
@@ -12388,10 +12845,17 @@ local Library do
         Library.SetFlags[Slider.Flag] = function(Value)
             Slider:Set(Value)
         end
-
         if Data.Tooltip or Data.tooltip then
             Library:AddTooltip(Items["Slider"].Instance, Data.Tooltip or Data.tooltip)
         end
+
+        self:RegisterFeature({
+            Name = Slider.Name,
+            Type = "Slider",
+            Instance = Items["Slider"].Instance,
+            Object = Slider,
+            Flag = Slider.Flag
+        })
 
         return Slider
     end
@@ -12608,7 +13072,7 @@ local Library do
             end
 
             if Dropdown.Callback then
-                Library:SafeCall(Dropdown.Callback, Option)
+                Library:SafeCall(Dropdown.Callback, Dropdown.Value)
             end
         end
 
@@ -12813,6 +13277,14 @@ local Library do
             Library:AddTooltip(Items["RealDropdown"].Instance, Data.Tooltip or Data.tooltip)
         end
 
+        self:RegisterFeature({
+            Name = Dropdown.Name,
+            Type = "Dropdown",
+            Instance = Items["Dropdown"].Instance,
+            Object = Dropdown,
+            Flag = Dropdown.Flag
+        })
+
         return Dropdown
     end
 
@@ -12883,6 +13355,14 @@ local Library do
         function Colorpicker:Get()
             return Extension:Get()
         end
+
+        self:RegisterFeature({
+            Name = Colorpicker.Name,
+            Type = "Colorpicker",
+            Instance = Items["Holder"].Instance,
+            Object = Colorpicker,
+            Flag = Colorpicker.Flag
+        })
 
         return Colorpicker
     end
@@ -12987,6 +13467,14 @@ local Library do
                 Extension.Items["ColorpickerButton"].Instance.LayoutOrder = Label.Count
             end
 
+            Label.Section:RegisterFeature({
+                Name = Label.Name .. " " .. (Data.Name or "Color"),
+                Type = "Colorpicker",
+                Instance = Extension.Items and Extension.Items["ColorpickerButton"] and Extension.Items["ColorpickerButton"].Instance or nil,
+                Object = Colorpicker,
+                Flag = Colorpicker.Flag
+            })
+
             return Colorpicker, Extension
         end
 
@@ -13015,12 +13503,27 @@ local Library do
                 Extension.Items["KeyButton"].Instance.LayoutOrder = 999
             end
 
+            Label.Section:RegisterFeature({
+                Name = Label.Name .. " " .. (Data.Name or "Keybind"),
+                Type = "Keybind",
+                Instance = Extension.Items and Extension.Items["KeyButton"] and Extension.Items["KeyButton"].Instance or nil,
+                Object = Keybind,
+                Flag = Keybind.Flag
+            })
+
             return Keybind, Extension
         end
 
         if Data.Tooltip or Data.tooltip then
             Library:AddTooltip(Items["Label"].Instance, Data.Tooltip or Data.tooltip)
         end
+
+        self:RegisterFeature({
+            Name = Label.Name,
+            Type = "Label",
+            Instance = Items["Label"].Instance,
+            Object = Label
+        })
 
         return Label
     end
@@ -13182,6 +13685,14 @@ local Library do
         Library.SetFlags[Textbox.Flag] = function(Value)
             Textbox:Set(Value)
         end
+
+        self:RegisterFeature({
+            Name = Textbox.Name,
+            Type = "Textbox",
+            Instance = Items["Textbox"].Instance,
+            Object = Textbox,
+            Flag = Textbox.Flag
+        })
 
         return Textbox
     end
@@ -13449,6 +13960,14 @@ local Library do
         if Data.Tooltip or Data.tooltip then
             Library:AddTooltip(Items["Listbox"].Instance, Data.Tooltip or Data.tooltip)
         end
+
+        self:RegisterFeature({
+            Name = Data.Name or Data.name or "Listbox",
+            Type = "Listbox",
+            Instance = Items["Listbox"].Instance,
+            Object = Listbox,
+            Flag = Listbox.Flag
+        })
 
         return Listbox
     end
@@ -14022,6 +14541,14 @@ local Library do
         if Data.Tooltip or Data.tooltip then
             Library:AddTooltip(Items["Bezier"].Instance, Data.Tooltip or Data.tooltip)
         end
+
+        self:RegisterFeature({
+            Name = Bezier.Name,
+            Type = "Bezier",
+            Instance = Items["Bezier"].Instance,
+            Object = Bezier,
+            Flag = Bezier.Flag
+        })
 
         return Bezier
     end
@@ -14856,6 +15383,14 @@ local Library do
 
         BodyPartBox.Items = Items
         BodyPartBox.PartFrames = PartFrames
+
+        self:RegisterFeature({
+            Name = BodyPartBox.Name,
+            Type = "BodyParts",
+            Instance = Items["Holder"].Instance,
+            Object = BodyPartBox,
+            Flag = BodyPartBox.Flag
+        })
 
         return BodyPartBox
     end
