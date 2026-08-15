@@ -1,9 +1,10 @@
+--spanish tech
 
---
+-- this library is highly based off samet uis
 
 local LoadingTick = os.clock()
 
-if getgenv().Library then
+if getgenv().Library and type(getgenv().Library.Unload) == "function" then
     getgenv().Library:Unload()
 end
 
@@ -846,8 +847,10 @@ local Library do
 
             local function FadeOut()
                 if TooltipGen ~= MyGen then return end
-                if not IsOutside() then
-                    task.defer(FadeOut)
+                local AbsSize = Element.AbsoluteSize
+                local ElementHidden = AbsSize.X == 0 and AbsSize.Y == 0
+                if not ElementHidden and not IsOutside() then
+                    task.delay(0.05, FadeOut)
                     return
                 end
 
@@ -882,7 +885,7 @@ local Library do
                 end)
             end
 
-            task.defer(FadeOut)
+            task.delay(0.05, FadeOut)
         end)
     end
 
@@ -10549,49 +10552,6 @@ local Library do
                 Color = Library.Theme.Outline,
                 Name = "\0"
             }):AddToTheme({Color = "Outline"})
-
-            Items["SearchResults"] = Instances:Create("Frame", {
-                Parent = Items["Content"].Instance,
-                BackgroundTransparency = 1,
-                Name = "\0",
-                BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(1, 0, 1, 0),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(255, 255, 255),
-                Visible = false
-            })
-
-            Items["SearchScroll"] = Instances:Create("ScrollingFrame", {
-                Parent = Items["SearchResults"].Instance,
-                ScrollBarImageColor3 = FromRGB(235, 157, 255),
-                Active = true,
-                AutomaticCanvasSize = Enum.AutomaticSize.Y,
-                ScrollBarThickness = 1,
-                Name = "\0",
-                BackgroundTransparency = 1,
-                Size = UDim2New(1, 0, 1, 0),
-                BackgroundColor3 = FromRGB(255, 255, 255),
-                BorderColor3 = FromRGB(0, 0, 0),
-                BorderSizePixel = 0,
-                BottomImage = Library:GetImage("Scrollbar"),
-                MidImage = Library:GetImage("Scrollbar"),
-                TopImage = Library:GetImage("Scrollbar"),
-                CanvasSize = UDim2New(0, 0, 0, 0)
-            })  Items["SearchScroll"]:AddToTheme({ScrollBarImageColor3 = "Accent"})
-
-            Instances:Create("UIPadding", {
-                Parent = Items["SearchScroll"].Instance,
-                PaddingTop = UDimNew(0, 6),
-                PaddingBottom = UDimNew(0, 6),
-                PaddingRight = UDimNew(0, 6),
-                PaddingLeft = UDimNew(0, 6)
-            })
-
-            Instances:Create("UIListLayout", {
-                Parent = Items["SearchScroll"].Instance,
-                Padding = UDimNew(0, 6),
-                SortOrder = Enum.SortOrder.LayoutOrder
-            })
         end
 
         function Window:SetOpen(Bool)
@@ -10606,240 +10566,200 @@ local Library do
         end
 
         function Window:Search(Query)
-            for _, Child in Items["SearchScroll"].Instance:GetChildren() do
-                if not Child:IsA("UIListLayout") and not Child:IsA("UIPadding") then
-                    Child:Destroy()
-                end
-            end
+            local IsEmpty = (not Query or Query == "" or StringGSub(Query, "%s+", "") == "")
+            local CleanQuery = not IsEmpty and string.lower(StringGSub(Query, "^%s*(.-)%s*$", "%1")) or ""
+            local StrippedQuery = not IsEmpty and StringGSub(CleanQuery, "%s+", "") or ""
 
-            if not Query or Query == "" or StringGSub(Query, "%s+", "") == "" then
-                Items["SearchResults"].Instance.Visible = false
-                for _, P in Window.Pages do
-                    if P.Active then
-                        P.Elements["Page"].Instance.Visible = true
-                    end
-                end
-                return
-            end
+            local FirstMatchingPage = nil
+            local CurrentActivePageHasMatches = false
 
-            for _, P in Window.Pages do
-                P.Elements["Page"].Instance.Visible = false
-            end
-            Items["SearchResults"].Instance.Visible = true
+            for _, Sec in Window.Sections do
+                local SectionFrame = Sec.Elements and (Sec.Elements["Section"] or Sec.Elements["MultiSection"])
+                if SectionFrame and SectionFrame.Instance then
+                    if IsEmpty then
+                        SectionFrame.Instance.Visible = true
+                        if Sec.Collapsible and Sec.Collapsed then
+                            if Sec.Elements["Content"] then
+                                Sec.Elements["Content"].Instance.Visible = false
+                            end
+                            if Sec.Elements["Chevron"] then
+                                Sec.Elements["Chevron"].Instance.Text = "+"
+                            end
+                        else
+                            if Sec.Elements["Content"] then
+                                Sec.Elements["Content"].Instance.Visible = true
+                            end
+                            if Sec.Elements["Chevron"] then
+                                Sec.Elements["Chevron"].Instance.Text = "-"
+                            end
+                        end
+                        if Sec.SectionContents then
+                            for _, SubSec in Sec.SectionContents do
+                                if SubSec.Elements and SubSec.Elements["Content"] then
+                                    SubSec.Elements["Content"].Instance.Visible = SubSec.Active
+                                end
+                                for _, Feature in (SubSec.Features or { }) do
+                                    if Feature.Instance then
+                                        Feature.Instance.Visible = true
+                                    end
+                                    if Feature.ParentInstance then
+                                        Feature.ParentInstance.Visible = true
+                                    end
+                                end
+                            end
+                        end
+                        for _, Feature in (Sec.Features or { }) do
+                            if Feature.Instance then
+                                Feature.Instance.Visible = true
+                            end
+                            if Feature.ParentInstance then
+                                Feature.ParentInstance.Visible = true
+                            end
+                        end
+                    else
+                        local SectionName = string.lower(Sec.Name or "")
+                        local TaglessSectionName = string.lower(StringGSub(Sec.Name or "", "<[^>]+>", ""))
+                        local StrippedSectionName = StringGSub(TaglessSectionName, "%s+", "")
+                        local SectionNameMatches = StringFind(SectionName, CleanQuery, 1, true) ~= nil
+                            or StringFind(TaglessSectionName, CleanQuery, 1, true) ~= nil
+                            or (StrippedQuery ~= "" and StringFind(StrippedSectionName, StrippedQuery, 1, true) ~= nil)
 
-            local CleanQuery = string.lower(Query)
-            local Matches = { }
-            local Seen = { }
+                        local SectionMatches = 0
+                        local FirstMatchingSubSec = nil
 
-            for _, Feature in Window.Features do
-                local FeatureName = string.lower(Feature.Name or "")
-                local SectionName = string.lower(Feature.Section and Feature.Section.Name or "")
-                local PageName = string.lower(Feature.Page and Feature.Page.Name or "")
-                local FlagName = Feature.Flag and string.lower(tostring(Feature.Flag)) or ""
+                        if Sec.SectionContents then
+                            for _, SubSec in Sec.SectionContents do
+                                local SubName = string.lower(SubSec.Name or "")
+                                local TaglessSubName = string.lower(StringGSub(SubSec.Name or "", "<[^>]+>", ""))
+                                local StrippedSubName = StringGSub(TaglessSubName, "%s+", "")
+                                local SubNameMatches = StringFind(SubName, CleanQuery, 1, true) ~= nil
+                                    or StringFind(TaglessSubName, CleanQuery, 1, true) ~= nil
+                                    or (StrippedQuery ~= "" and StringFind(StrippedSubName, StrippedQuery, 1, true) ~= nil)
 
-                if StringFind(FeatureName, CleanQuery, 1, true)
-                    or StringFind(SectionName, CleanQuery, 1, true)
-                    or StringFind(PageName, CleanQuery, 1, true)
-                    or (FlagName ~= "" and StringFind(FlagName, CleanQuery, 1, true)) then
-                    if not Seen[Feature] then
-                        Seen[Feature] = true
-                        TableInsert(Matches, Feature)
-                    end
-                end
-            end
+                                local SubMatches = 0
+                                for _, Feature in (SubSec.Features or { }) do
+                                    local FeatureName = string.lower(Feature.Name or "")
+                                    local TaglessFeatureName = string.lower(StringGSub(Feature.Name or "", "<[^>]+>", ""))
+                                    local StrippedFeatureName = StringGSub(TaglessFeatureName, "%s+", "")
+                                    local FlagName = Feature.Flag and string.lower(tostring(Feature.Flag)) or ""
+                                    local StrippedFlagName = StringGSub(FlagName, "%s+", "")
 
-            if #Matches == 0 then
-                local EmptyFrame = Instances:Create("Frame", {
-                    Parent = Items["SearchScroll"].Instance,
-                    Name = "\0",
-                    Size = UDim2New(1, 0, 0, 36),
-                    BorderColor3 = FromRGB(27, 27, 32),
-                    BorderSizePixel = 2,
-                    BackgroundColor3 = FromRGB(20, 20, 25)
-                })  EmptyFrame:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
+                                    local IsMatch = SectionNameMatches or SubNameMatches
+                                        or StringFind(FeatureName, CleanQuery, 1, true) ~= nil
+                                        or StringFind(TaglessFeatureName, CleanQuery, 1, true) ~= nil
+                                        or (StrippedQuery ~= "" and StringFind(StrippedFeatureName, StrippedQuery, 1, true) ~= nil)
+                                        or (FlagName ~= "" and (StringFind(FlagName, CleanQuery, 1, true) ~= nil or (StrippedQuery ~= "" and StringFind(StrippedFlagName, StrippedQuery, 1, true) ~= nil)))
 
-                Instances:Create("UIStroke", {
-                    Parent = EmptyFrame.Instance,
-                    Color = FromRGB(10, 10, 10),
-                    Name = "\0",
-                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-                }):AddToTheme({Color = "Border"})
+                                    if Feature.Instance then
+                                        Feature.Instance.Visible = IsMatch
+                                    end
+                                    if IsMatch then
+                                        if Feature.ParentInstance then
+                                            Feature.ParentInstance.Visible = true
+                                        end
+                                        SubMatches = SubMatches + 1
+                                        SectionMatches = SectionMatches + 1
+                                    end
+                                end
 
-                local EmptyLabel = Instances:Create("TextLabel", {
-                    Parent = EmptyFrame.Instance,
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(215, 215, 215),
-                    TextTransparency = 0.5,
-                    Text = StringFormat("No features found matching \"%s\"", Query),
-                    Name = "\0",
-                    Size = UDim2New(1, 0, 1, 0),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    TextSize = 12,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  EmptyLabel:AddToTheme({TextColor3 = "Text"})
+                                if SubMatches > 0 or SubNameMatches then
+                                    if not FirstMatchingSubSec then
+                                        FirstMatchingSubSec = SubSec
+                                    end
+                                end
+                            end
 
-                Instances:Create("UIStroke", {
-                    Parent = EmptyLabel.Instance,
-                    LineJoinMode = Enum.LineJoinMode.Miter,
-                    Name = "\0"
-                }):AddToTheme({Color = "Text Border"})
+                            if SectionMatches > 0 or SectionNameMatches then
+                                SectionFrame.Instance.Visible = true
+                                if FirstMatchingSubSec then
+                                    for _, SubSec in Sec.SectionContents do
+                                        if SubSec ~= FirstMatchingSubSec then
+                                            if SubSec.Elements and SubSec.Elements["Content"] then
+                                                SubSec.Elements["Content"].Instance.Visible = false
+                                            end
+                                        end
+                                    end
+                                    if FirstMatchingSubSec.Elements and FirstMatchingSubSec.Elements["Content"] then
+                                        FirstMatchingSubSec.Elements["Content"].Instance.Visible = true
+                                    end
+                                end
+                                if Sec.Page then
+                                    if Sec.Page.Active then
+                                        CurrentActivePageHasMatches = true
+                                    end
+                                    if not FirstMatchingPage then
+                                        FirstMatchingPage = Sec.Page
+                                    end
+                                end
+                            else
+                                SectionFrame.Instance.Visible = false
+                            end
+                        else
+                            for _, Feature in (Sec.Features or { }) do
+                                local FeatureName = string.lower(Feature.Name or "")
+                                local TaglessFeatureName = string.lower(StringGSub(Feature.Name or "", "<[^>]+>", ""))
+                                local StrippedFeatureName = StringGSub(TaglessFeatureName, "%s+", "")
+                                local FlagName = Feature.Flag and string.lower(tostring(Feature.Flag)) or ""
+                                local StrippedFlagName = StringGSub(FlagName, "%s+", "")
 
-                return
-            end
+                                local IsMatch = SectionNameMatches
+                                    or StringFind(FeatureName, CleanQuery, 1, true) ~= nil
+                                    or StringFind(TaglessFeatureName, CleanQuery, 1, true) ~= nil
+                                    or (StrippedQuery ~= "" and StringFind(StrippedFeatureName, StrippedQuery, 1, true) ~= nil)
+                                    or (FlagName ~= "" and (StringFind(FlagName, CleanQuery, 1, true) ~= nil or (StrippedQuery ~= "" and StringFind(StrippedFlagName, StrippedQuery, 1, true) ~= nil)))
 
-            for _, Feature in Matches do
-                local ResultButton = Instances:Create("TextButton", {
-                    Parent = Items["SearchScroll"].Instance,
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(0, 0, 0),
-                    BorderColor3 = FromRGB(27, 27, 32),
-                    Text = "",
-                    AutoButtonColor = false,
-                    Name = "\0",
-                    Size = UDim2New(1, 0, 0, 38),
-                    BorderSizePixel = 2,
-                    TextSize = 14,
-                    BackgroundColor3 = FromRGB(20, 20, 25)
-                })  ResultButton:AddToTheme({BackgroundColor3 = "Inline", BorderColor3 = "Outline"})
+                                if Feature.Instance then
+                                    Feature.Instance.Visible = IsMatch
+                                end
+                                if IsMatch then
+                                    if Feature.ParentInstance then
+                                        Feature.ParentInstance.Visible = true
+                                    end
+                                    SectionMatches = SectionMatches + 1
+                                end
+                            end
 
-                Instances:Create("UIStroke", {
-                    Parent = ResultButton.Instance,
-                    Color = FromRGB(10, 10, 10),
-                    Name = "\0",
-                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-                }):AddToTheme({Color = "Border"})
-
-                local AccentLine = Instances:Create("Frame", {
-                    Parent = ResultButton.Instance,
-                    Name = "\0",
-                    BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(0, 2, 1, 0),
-                    BorderSizePixel = 0,
-                    BackgroundColor3 = FromRGB(235, 157, 255)
-                })  AccentLine:AddToTheme({BackgroundColor3 = "Accent"})
-
-                Instances:Create("UIGradient", {
-                    Parent = AccentLine.Instance,
-                    Rotation = 90,
-                    Transparency = NumberSequence.new({
-                        NumberSequenceKeypoint.new(0, 1),
-                        NumberSequenceKeypoint.new(0.25, 0),
-                        NumberSequenceKeypoint.new(0.75, 0),
-                        NumberSequenceKeypoint.new(1, 1)
-                    })
-                })
-
-                local Breadcrumb = (Feature.Page and Feature.Page.Name or "Tab") .. " > " .. (Feature.Section and Feature.Section.Name or "Section")
-
-                local BreadcrumbLabel = Instances:Create("TextLabel", {
-                    Parent = ResultButton.Instance,
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(167, 139, 250),
-                    Text = Breadcrumb,
-                    Name = "\0",
-                    Size = UDim2New(1, -76, 0, 13),
-                    Position = UDim2New(0, 8, 0, 4),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    TextTruncate = Enum.TextTruncate.AtEnd,
-                    TextSize = 11,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  BreadcrumbLabel:AddToTheme({TextColor3 = "Accent"})
-
-                Instances:Create("UIStroke", {
-                    Parent = BreadcrumbLabel.Instance,
-                    LineJoinMode = Enum.LineJoinMode.Miter,
-                    Name = "\0"
-                }):AddToTheme({Color = "Text Border"})
-
-                local FeatureLabel = Instances:Create("TextLabel", {
-                    Parent = ResultButton.Instance,
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(215, 215, 215),
-                    Text = Feature.Name,
-                    Name = "\0",
-                    Size = UDim2New(1, -76, 0, 15),
-                    Position = UDim2New(0, 8, 0, 18),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    TextTruncate = Enum.TextTruncate.AtEnd,
-                    TextSize = 12,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  FeatureLabel:AddToTheme({TextColor3 = "Text"})
-
-                Instances:Create("UIStroke", {
-                    Parent = FeatureLabel.Instance,
-                    LineJoinMode = Enum.LineJoinMode.Miter,
-                    Name = "\0"
-                }):AddToTheme({Color = "Text Border"})
-
-                local TypeBadge = Instances:Create("Frame", {
-                    Parent = ResultButton.Instance,
-                    AnchorPoint = Vector2New(1, 0.5),
-                    Name = "\0",
-                    Position = UDim2New(1, -8, 0.5, 0),
-                    Size = UDim2New(0, 56, 0, 18),
-                    BorderSizePixel = 2,
-                    BorderColor3 = FromRGB(10, 10, 10),
-                    BackgroundColor3 = FromRGB(30, 30, 35)
-                })  TypeBadge:AddToTheme({BackgroundColor3 = "Page Background", BorderColor3 = "Border"})
-
-                Instances:Create("UIStroke", {
-                    Parent = TypeBadge.Instance,
-                    Color = FromRGB(27, 27, 32),
-                    Name = "\0",
-                    ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-                }):AddToTheme({Color = "Outline"})
-
-                local TypeLabel = Instances:Create("TextLabel", {
-                    Parent = TypeBadge.Instance,
-                    FontFace = Library.Font,
-                    TextColor3 = FromRGB(215, 215, 215),
-                    TextTransparency = 0.35,
-                    Text = Feature.Type,
-                    Name = "\0",
-                    Size = UDim2New(1, 0, 1, 0),
-                    BackgroundTransparency = 1,
-                    BorderSizePixel = 0,
-                    TextSize = 10,
-                    TextXAlignment = Enum.TextXAlignment.Center,
-                    BackgroundColor3 = FromRGB(255, 255, 255)
-                })  TypeLabel:AddToTheme({TextColor3 = "Text"})
-
-                Instances:Create("UIStroke", {
-                    Parent = TypeLabel.Instance,
-                    LineJoinMode = Enum.LineJoinMode.Miter,
-                    Name = "\0"
-                }):AddToTheme({Color = "Text Border"})
-
-                ResultButton:OnHover(function()
-                    ResultButton:Tween(CachedHoverTweenInfo, {BackgroundColor3 = Library.Theme["Hovered Element"]})
-                    ResultButton:ChangeItemTheme({BackgroundColor3 = "Hovered Element", BorderColor3 = "Border"})
-                end)
-
-                ResultButton:OnHoverLeave(function()
-                    ResultButton:Tween(CachedHoverTweenInfo, {BackgroundColor3 = Library.Theme["Inline"]})
-                    ResultButton:ChangeItemTheme({BackgroundColor3 = "Inline", BorderColor3 = "Border"})
-                end)
-
-                ResultButton:Connect("MouseButton1Down", function()
-                    if Feature.Page then
-                        for _, P in Window.Pages do
-                            P:Turn(P == Feature.Page)
+                            if SectionMatches > 0 or SectionNameMatches then
+                                SectionFrame.Instance.Visible = true
+                                if Sec.Elements["Content"] then
+                                    Sec.Elements["Content"].Instance.Visible = true
+                                end
+                                if Sec.Elements["Chevron"] then
+                                    Sec.Elements["Chevron"].Instance.Text = "-"
+                                end
+                                if Sec.Page then
+                                    if Sec.Page.Active then
+                                        CurrentActivePageHasMatches = true
+                                    end
+                                    if not FirstMatchingPage then
+                                        FirstMatchingPage = Sec.Page
+                                    end
+                                end
+                            else
+                                SectionFrame.Instance.Visible = false
+                            end
                         end
                     end
-                    if Feature.Section and Feature.Section.Collapsible and Feature.Section.Collapsed then
-                        Feature.Section:SetCollapsed(false)
+                end
+            end
+
+            if not IsEmpty and not CurrentActivePageHasMatches and FirstMatchingPage then
+                for _, P in Window.Pages do
+                    local WantActive = (P == FirstMatchingPage)
+                    P.Active = WantActive
+                    if P.Elements and P.Elements["Page"] then
+                        P.Elements["Page"].Instance.Visible = WantActive
                     end
-                    Items["SearchInput"].Instance.Text = ""
-                    Window:Search("")
-                    if Feature.Instance then
-                        Library:ApplyClickGradient(Feature.Instance)
+                    if P.Elements then
+                        if P.Elements["Text"] then
+                            P.Elements["Text"].Instance.TextTransparency = WantActive and 0 or 0.5
+                            P.Elements["Text"].Instance.TextColor3 = WantActive and Library.Theme.Accent or Library.Theme.Text
+                        end
+                        if P.Elements["AccentLine"] then
+                            P.Elements["AccentLine"].Instance.Visible = WantActive
+                        end
                     end
-                end)
+                end
             end
         end
 
@@ -11051,7 +10971,7 @@ local Library do
                     Instances:Create("UIPadding", {
                         Parent = NewColumn.Instance,
                         PaddingTop = UDimNew(0, 6),
-                        PaddingBottom = UDimNew(0, 6),
+                        PaddingBottom = UDimNew(0, 4),
                         PaddingRight = UDimNew(0, 6),
                         PaddingLeft = UDimNew(0, 6)
                     })
@@ -11288,7 +11208,7 @@ local Library do
                 Instances:Create("UIPadding", {
                     Parent = NewColumn.Instance,
                     PaddingTop = UDimNew(0, 6),
-                    PaddingBottom = UDimNew(0, 6),
+                    PaddingBottom = UDimNew(0, 4),
                     PaddingRight = UDimNew(0, 6),
                     PaddingLeft = UDimNew(0, 6)
                 })
@@ -11479,15 +11399,23 @@ local Library do
                 BackgroundTransparency = 1,
                 Position = UDim2New(0, 7, 0, 21),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(1, -14, 1, -20),
+                Size = UDim2New(1, -14, 0, 0),
                 BorderSizePixel = 0,
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
 
+            Instances:Create("UIPadding", {
+                Parent = Items["Content"].Instance,
+                PaddingTop = UDimNew(0, 4),
+                PaddingBottom = UDimNew(0, 0),
+                PaddingLeft = UDimNew(0, 0),
+                PaddingRight = UDimNew(0, 0)
+            })
+
             Instances:Create("UIListLayout", {
                 Parent = Items["Content"].Instance,
-                Padding = UDimNew(0, 8),
+                Padding = UDimNew(0, 6),
                 SortOrder = Enum.SortOrder.LayoutOrder
             })
         end
@@ -11532,8 +11460,10 @@ local Library do
             end
         end
 
+        Section.Features = { }
         Section.Elements = Items
 
+        Section.Window.Sections[#Section.Window.Sections+1] = Section
         return setmetatable(Section, Library.Sections)
     end
 
@@ -11616,10 +11546,11 @@ local Library do
                 Parent = Items["MultiSection"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
-                Position = UDim2New(0, 7, 0, 35),
+                Position = UDim2New(0, 7, 0, 33),
                 BorderColor3 = FromRGB(10, 10, 10),
-                Size = UDim2New(1, -14, 1, -33),
+                Size = UDim2New(1, -14, 0, 0),
                 BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(15, 15, 20)
             })
         end
@@ -11729,15 +11660,22 @@ local Library do
                     BackgroundTransparency = 1,
                     Name = "\0",
                     BorderColor3 = FromRGB(0, 0, 0),
-                    Size = UDim2New(1, 0, 1, 0),
+                    Size = UDim2New(1, 0, 0, 0),
                     BorderSizePixel = 0,
+                    AutomaticSize = Enum.AutomaticSize.Y,
                     Visible = false,
                     BackgroundColor3 = FromRGB(255, 255, 255)
                 })
 
+                Instances:Create("UIPadding", {
+                    Parent = SubItems["Content"].Instance,
+                    PaddingTop = UDimNew(0, 4),
+                    PaddingBottom = UDimNew(0, 0)
+                })
+
                 Instances:Create("UIListLayout", {
                     Parent = SubItems["Content"].Instance,
-                    Padding = UDimNew(0, 6),
+                    Padding = UDimNew(0, 5),
                     SortOrder = Enum.SortOrder.LayoutOrder
                 })
             end
@@ -11786,11 +11724,13 @@ local Library do
                 NewSection:Turn(true)
             end
 
+            NewSection.Features = { }
             NewSection.Elements = SubItems
 
             MultiSection.SectionContents[#MultiSection.SectionContents+1] = setmetatable(NewSection, Library.Sections)
         end
 
+        MultiSection.Features = { }
         MultiSection.SectionContents[1]:Turn(true)
         MultiSection.Window.Sections[#MultiSection.Window.Sections+1] = MultiSection
         return TableUnpack(MultiSection.SectionContents)
@@ -11847,7 +11787,7 @@ local Library do
 
             Instances:Create("UIPadding", {
                 Parent = Items["Section"].Instance,
-                PaddingBottom = UDimNew(0, 6)
+                PaddingBottom = UDimNew(0, 0)
             })
 
             Items["AccentLine"] = Instances:Create("Frame", {
@@ -11926,8 +11866,10 @@ local Library do
             })
         end
 
+        Section.Features = { }
         Section.Elements = Items
 
+        Section.Window.Sections[#Section.Window.Sections+1] = Section
         return setmetatable(Section, Library.Sections)
     end
 
@@ -11943,11 +11885,25 @@ local Library do
             Page = self.Page,
             SubPage = self.SubPage,
             Instance = Data.Instance,
+            ParentInstance = Data.ParentInstance,
             Object = Data.Object,
             Flag = Data.Flag
         }
 
         TableInsert(self.Window.Features, Feature)
+
+        if self.MultiSection then
+            if not self.MultiSection.Features then
+                self.MultiSection.Features = { }
+            end
+            TableInsert(self.MultiSection.Features, Feature)
+        end
+
+        if not self.Features then
+            self.Features = { }
+        end
+        TableInsert(self.Features, Feature)
+
         return Feature
     end
 
@@ -12204,6 +12160,7 @@ local Library do
                 Name = Toggle.Name .. " " .. (Data.Name or "Color"),
                 Type = "Colorpicker",
                 Instance = Extension.Items and Extension.Items["ColorpickerButton"] and Extension.Items["ColorpickerButton"].Instance or nil,
+                ParentInstance = Items["Toggle"].Instance,
                 Object = Colorpicker,
                 Flag = Colorpicker.Flag
             })
@@ -12241,6 +12198,7 @@ local Library do
                 Name = Toggle.Name .. " " .. (Data.Name or "Keybind"),
                 Type = "Keybind",
                 Instance = Extension.Items and Extension.Items["KeyButton"] and Extension.Items["KeyButton"].Instance or nil,
+                ParentInstance = Items["Toggle"].Instance,
                 Object = Keybind,
                 Flag = Keybind.Flag
             })
@@ -13471,6 +13429,7 @@ local Library do
                 Name = Label.Name .. " " .. (Data.Name or "Color"),
                 Type = "Colorpicker",
                 Instance = Extension.Items and Extension.Items["ColorpickerButton"] and Extension.Items["ColorpickerButton"].Instance or nil,
+                ParentInstance = Items["Label"].Instance,
                 Object = Colorpicker,
                 Flag = Colorpicker.Flag
             })
@@ -13507,6 +13466,7 @@ local Library do
                 Name = Label.Name .. " " .. (Data.Name or "Keybind"),
                 Type = "Keybind",
                 Instance = Extension.Items and Extension.Items["KeyButton"] and Extension.Items["KeyButton"].Instance or nil,
+                ParentInstance = Items["Label"].Instance,
                 Object = Keybind,
                 Flag = Keybind.Flag
             })
@@ -14707,7 +14667,7 @@ local Library do
                 Image = Library:GetImage("Settings") or "",
                 ImageColor3 = FromRGB(140, 140, 148),
                 BorderSizePixel = 0,
-                Transparency = .3
+                Transparency = .3,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
             Items["SettingsIcon"]:AddToTheme({ ImageColor3 = "Text" })
