@@ -1,6 +1,8 @@
---spanish tech
 
--- this library is highly based off samet uis
+-- spanish tech
+
+-- this is a public library now, if you paid for it after this date (17/08/2026) then you got scammed
+-- HEAVLY based on samets uis
 
 local LoadingTick = os.clock()
 
@@ -94,9 +96,9 @@ local Library do
         },
 
         Folders = {
-            Directory = "kimikahax",
-            Configs = "kimikahax/Configs",
-            Assets = "kimikahax/Assets"
+            Directory = "opiods",
+            Configs = "opiods/Configs",
+            Assets = "opiods/Assets"
         },
 
         Images = {
@@ -4099,7 +4101,7 @@ local Library do
                                     end)
 
                                     if ImgSuccess and ImgData and ImgData ~= "" then
-                                        local CachePath = "kimikahax/Assets/cover_" .. tostring(Item.id) .. ".jpg"
+                                        local CachePath = "opiods/Assets/cover_" .. tostring(Item.id) .. ".jpg"
                                         if not isfile(CachePath) then
                                             writefile(CachePath, ImgData)
                                         end
@@ -10341,6 +10343,7 @@ local Library do
             TitlePosition = Data.TitlePosition or Data.titleposition or "Left",
             RichText = Data.RichText or Data.richtext or false,
             Size = Data.Size or Data.size or UDim2New(0, 500, 0, 600),
+            TabLayout = Data.TabLayout or Data.tablayout or Data.Tablayout or "Vertical",
 
             FadeSpeed = Data.FadeSpeed or Data.fadespeed or 0.25,
 
@@ -10455,10 +10458,12 @@ local Library do
                 Name = "\0"
             }):AddToTheme({Color = "Border"})
 
+            local IsHorizontal = Window.TabLayout == "Horizontal"
+
             Items["SearchContainer"] = Instances:Create("Frame", {
                 Parent = Items["Inline"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, 7, 0, 7),
+                Position = IsHorizontal and UDim2New(1, -117, 0, 5) or UDim2New(0, 7, 0, 7),
                 BorderColor3 = FromRGB(10, 10, 10),
                 Size = UDim2New(0, 110, 0, 22),
                 BorderSizePixel = 2,
@@ -10520,16 +10525,16 @@ local Library do
                 Parent = Items["Inline"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
-                Position = UDim2New(0, 7, 0, 35),
+                Position = IsHorizontal and UDim2New(0, 7, 0, 7) or UDim2New(0, 7, 0, 35),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(0, 110, 1, -42),
+                Size = IsHorizontal and UDim2New(1, -131, 0, 19) or UDim2New(0, 110, 1, -42),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
 
             Instances:Create("UIListLayout", {
                 Parent = Items["Pages"].Instance,
-                FillDirection = Enum.FillDirection.Vertical,
+                FillDirection = IsHorizontal and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical,
                 HorizontalFlex = Enum.UIFlexAlignment.Fill,
                 Padding = UDimNew(0, 6),
                 SortOrder = Enum.SortOrder.LayoutOrder
@@ -10538,9 +10543,9 @@ local Library do
             Items["Content"] = Instances:Create("Frame", {
                 Parent = Items["Inline"].Instance,
                 Name = "\0",
-                Position = UDim2New(0, 123, 0, 7),
+                Position = IsHorizontal and UDim2New(0, 7, 0, 32) or UDim2New(0, 123, 0, 7),
                 BorderColor3 = FromRGB(10, 10, 10),
-                Size = UDim2New(1, -136, 1, -14),
+                Size = IsHorizontal and UDim2New(1, -14, 1, -39) or UDim2New(1, -136, 1, -14),
                 BorderSizePixel = 2,
                 BackgroundColor3 = FromRGB(15, 15, 20)
             })  Items["Content"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
@@ -10758,6 +10763,9 @@ local Library do
                         if P.Elements["AccentLine"] then
                             P.Elements["AccentLine"].Instance.Visible = WantActive
                         end
+                        if P.Elements["Hide"] then
+                            P.Elements["Hide"].Instance.Visible = WantActive
+                        end
                     end
                 end
             end
@@ -10853,6 +10861,8 @@ local Library do
             Elements = { }
         }
 
+        local IsHorizontal = Page.Window.TabLayout == "Horizontal"
+
         local Items = { } do
             Items["Inactive"] = Instances:Create("TextButton", {
                 Parent = Page.Window.Elements["Pages"].Instance,
@@ -10862,8 +10872,8 @@ local Library do
                 Text = "",
                 AutoButtonColor = false,
                 Name = "\0",
-                Size = UDim2New(1, 0, 0, 24),
-                BorderSizePixel = 2,
+                Size = IsHorizontal and UDim2New(1, 0, 1, 0) or UDim2New(1, 0, 0, 24),
+                BorderSizePixel = IsHorizontal and 0 or 2,
                 TextSize = 14,
                 BackgroundColor3 = FromRGB(30, 30, 35)
             })  Items["Inactive"]:AddToTheme({BackgroundColor3 = "Page Background", BorderColor3 = "Border"})
@@ -10876,29 +10886,67 @@ local Library do
                 Name = "\0"
             }):AddToTheme({Color = "Outline"})
 
-            Items["AccentLine"] = Instances:Create("Frame", {
-                Parent = Items["Inactive"].Instance,
-                Visible = false,
-                BorderColor3 = FromRGB(0, 0, 0),
-                AnchorPoint = Vector2New(0, 0.5),
-                Name = "\0",
-                Position = UDim2New(0, 0, 0.5, 0),
-                Size = UDim2New(0, 2, 1, -4),
-                ZIndex = 2,
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(235, 157, 255)
-            })  Items["AccentLine"]:AddToTheme({BackgroundColor3 = "Accent"})
+            if IsHorizontal then
+                Items["Hide"] = Instances:Create("Frame", {
+                    Parent = Items["Inactive"].Instance,
+                    Visible = false,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    AnchorPoint = Vector2New(0, 1),
+                    Name = "\0",
+                    Position = UDim2New(0, 0, 1, 2),
+                    Size = UDim2New(1, 0, 0, 2),
+                    ZIndex = 5,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(20, 20, 25)
+                })  Items["Hide"]:AddToTheme({BackgroundColor3 = "Background"})
 
-            Instances:Create("UIGradient", {
-                Parent = Items["AccentLine"].Instance,
-                Rotation = 90,
-                Transparency = NumberSequence.new({
-                    NumberSequenceKeypoint.new(0, 1),
-                    NumberSequenceKeypoint.new(0.25, 0),
-                    NumberSequenceKeypoint.new(0.75, 0),
-                    NumberSequenceKeypoint.new(1, 1)
+                Items["MiscPixel1"] = Instances:Create("Frame", {
+                    Parent = Items["Hide"].Instance,
+                    Size = UDim2New(0, 1, 0, 1),
+                    Name = "\0",
+                    Position = UDim2New(0, -1, 0, 1),
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    ZIndex = 5,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(27, 27, 32)
                 })
-            })
+
+                Items["MiscPixel2"] = Instances:Create("Frame", {
+                    Parent = Items["Hide"].Instance,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    AnchorPoint = Vector2New(1, 0),
+                    Name = "\0",
+                    Position = UDim2New(1, 1, 0, 1),
+                    Size = UDim2New(0, 1, 0, 1),
+                    ZIndex = 5,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(27, 27, 32)
+                })
+            else
+                Items["AccentLine"] = Instances:Create("Frame", {
+                    Parent = Items["Inactive"].Instance,
+                    Visible = false,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    AnchorPoint = Vector2New(0, 0.5),
+                    Name = "\0",
+                    Position = UDim2New(0, 0, 0.5, 0),
+                    Size = UDim2New(0, 2, 1, -4),
+                    ZIndex = 2,
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(235, 157, 255)
+                })  Items["AccentLine"]:AddToTheme({BackgroundColor3 = "Accent"})
+
+                Instances:Create("UIGradient", {
+                    Parent = Items["AccentLine"].Instance,
+                    Rotation = 90,
+                    Transparency = NumberSequence.new({
+                        NumberSequenceKeypoint.new(0, 1),
+                        NumberSequenceKeypoint.new(0.25, 0),
+                        NumberSequenceKeypoint.new(0.75, 0),
+                        NumberSequenceKeypoint.new(1, 1)
+                    })
+                })
+            end
 
             Items["Text"] = Instances:Create("TextLabel", {
                 Parent = Items["Inactive"].Instance,
@@ -10907,12 +10955,12 @@ local Library do
                 TextTransparency = 0.47999998927116394,
                 Text = Page.Name,
                 Name = "\0",
-                Size = UDim2New(1, -10, 1, 0),
+                Size = IsHorizontal and UDim2New(1, 0, 1, 0) or UDim2New(1, -10, 1, 0),
                 BackgroundTransparency = 1,
-                Position = UDim2New(0, 8, 0, -1),
+                Position = IsHorizontal and UDim2New(0, 0, 0, -1) or UDim2New(0, 8, 0, -1),
                 BorderSizePixel = 0,
                 BorderColor3 = FromRGB(0, 0, 0),
-                TextXAlignment = Enum.TextXAlignment.Left,
+                TextXAlignment = IsHorizontal and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left,
                 TextSize = 12,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
@@ -10925,8 +10973,8 @@ local Library do
 
             Items["UIGradient"] = Instances:Create("UIGradient", {
                 Parent = Items["Inactive"].Instance,
-                Rotation = 0,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(108, 108, 108))}
+                Rotation = IsHorizontal and 90 or 0,
+                Color = IsHorizontal and RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(138, 138, 138))} or RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(108, 108, 108))}
             })
 
             Items["Page"] = Instances:Create("Frame", {
@@ -11031,13 +11079,21 @@ local Library do
                 Items["Page"].Instance.Visible = true
 
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
-                Items["AccentLine"].Instance.Visible = true
+                if IsHorizontal then
+                    Items["Hide"].Instance.Visible = true
+                else
+                    Items["AccentLine"].Instance.Visible = true
+                end
 
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
             else
                 Items["Page"].Instance.Visible = false
                 Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
-                Items["AccentLine"].Instance.Visible = false
+                if IsHorizontal then
+                    Items["Hide"].Instance.Visible = false
+                else
+                    Items["AccentLine"].Instance.Visible = false
+                end
 
                 Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
             end
@@ -11065,11 +11121,29 @@ local Library do
     Library.Pages.SubPage = function(self, Data)
         Data = Data or { }
 
+        local RawIcon = Data.Icon or Data.icon
+
+        -- Resolve CustomAsset icons: Icon = "CustomAsset:Search.png" or "CustomAsset:/path/to/file.png"
+        local ResolvedIconImage
+        if RawIcon and type(RawIcon) == "string" then
+            local customPath = RawIcon:match("^CustomAsset:(.+)$")
+            if customPath then
+                -- If the path starts with / treat it as absolute, otherwise relative to Assets folder
+                if customPath:sub(1, 1) == "/" then
+                    ResolvedIconImage = getcustomasset(customPath)
+                else
+                    ResolvedIconImage = getcustomasset(Library.Folders.Assets .. "/" .. customPath)
+                end
+            end
+        end
+
         local SubPage = {
             Window = self.Window,
             Page = self,
 
-            Icon = Data.Icon or Data.icon or "9080568477801",
+            Name = Data.Name or Data.name,
+            Icon = RawIcon or "9080568477801",
+            IconImage = ResolvedIconImage,  -- set if CustomAsset was used
             Columns = Data.Columns or Data.columns or 2,
 
             Active = false,
@@ -11136,20 +11210,47 @@ local Library do
                 BackgroundColor3 = FromRGB(27, 27, 32)
             })
 
-            Items["Icon"] = Instances:Create("ImageLabel", {
-                Parent = Items["Inactive"].Instance,
-                ScaleType = Enum.ScaleType.Fit,
-                ImageTransparency = 0.35,
-                BorderColor3 = FromRGB(0, 0, 0),
-                Name = "\0",
-                AnchorPoint = Vector2New(0.5, 0.5),
-                Image = "rbxassetid://"..SubPage.Icon,
-                BackgroundTransparency = 1,
-                Position = UDim2New(0.5, 0, 0.5, 0),
-                Size = UDim2New(0, 30, 0, 30),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["Icon"]:AddToTheme({ImageColor3 = "Text"})
+            if SubPage.Name then
+                Items["Text"] = Instances:Create("TextLabel", {
+                    Parent = Items["Inactive"].Instance,
+                    FontFace = Library.Font,
+                    TextColor3 = FromRGB(215, 215, 215),
+                    TextTransparency = 0.47999998927116394,
+                    Text = SubPage.Name,
+                    Name = "\0",
+                    Size = UDim2New(1, 0, 1, 0),
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0, 0, 0, -1),
+                    BorderSizePixel = 0,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    TextSize = 12,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Text"]:AddToTheme({TextColor3 = "Text"})
+
+                Instances:Create("UIStroke", {
+                    Parent = Items["Text"].Instance,
+                    LineJoinMode = Enum.LineJoinMode.Miter,
+                    Name = "\0"
+                }):AddToTheme({Color = "Text Border"})
+            else
+                -- Use resolved CustomAsset image or fall back to rbxassetid
+                local iconImage = SubPage.IconImage or ("rbxassetid://" .. SubPage.Icon)
+                Items["Icon"] = Instances:Create("ImageLabel", {
+                    Parent = Items["Inactive"].Instance,
+                    ScaleType = Enum.ScaleType.Fit,
+                    ImageTransparency = 0.35,
+                    BorderColor3 = FromRGB(0, 0, 0),
+                    Name = "\0",
+                    AnchorPoint = Vector2New(0.5, 0.5),
+                    Image = iconImage,
+                    BackgroundTransparency = 1,
+                    Position = UDim2New(0.5, 0, 0.5, 0),
+                    Size = UDim2New(0, 30, 0, 30),
+                    BorderSizePixel = 0,
+                    BackgroundColor3 = FromRGB(255, 255, 255)
+                })  Items["Icon"]:AddToTheme({ImageColor3 = "Text"})
+            end
 
             Instances:Create("UIGradient", {
                 Parent = Items["Inactive"].Instance,
@@ -11237,18 +11338,28 @@ local Library do
             if Bool then
                 Items["Subtab"].Instance.Visible = true
 
-                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
+                if Items["Icon"] then
+                    Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Accent, ImageTransparency = 0})
+                    Items["Icon"]:ChangeItemTheme({ImageColor3 = "Accent"})
+                end
+                if Items["Text"] then
+                    Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Accent, TextTransparency = 0})
+                    Items["Text"]:ChangeItemTheme({TextColor3 = "Accent"})
+                end
                 Items["Hide"].Instance.Visible = true
-
-                Items["Icon"]:ChangeItemTheme({ImageColor3 = "Accent"})
 
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, 1)
             else
                 Items["Subtab"].Instance.Visible = false
-                Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.35})
+                if Items["Icon"] then
+                    Items["Icon"]:Tween(nil, {ImageColor3 = Library.Theme.Text, ImageTransparency = 0.35})
+                    Items["Icon"]:ChangeItemTheme({ImageColor3 = "Text"})
+                end
+                if Items["Text"] then
+                    Items["Text"]:Tween(nil, {TextColor3 = Library.Theme.Text, TextTransparency = 0.5})
+                    Items["Text"]:ChangeItemTheme({TextColor3 = "Text"})
+                end
                 Items["Hide"].Instance.Visible = false
-
-                Items["Icon"]:ChangeItemTheme({ImageColor3 = "Text"})
 
                 Items["Inactive"].Instance.Size = UDim2New(1, 0, 1, -2)
             end
