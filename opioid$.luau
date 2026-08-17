@@ -67,7 +67,7 @@ local Library do
             ["Page Background"] = FromRGB(32, 32, 38),
             ["Border"] = FromRGB(12, 12, 16),
             ["Outline"] = FromRGB(38, 38, 45),
-            ["Accent"] = FromRGB(167, 139, 250),
+            ["Accent"] = FromRGB(185, 208, 250),
             ["Element"] = FromRGB(32, 32, 38),
             ["Hovered Element"] = FromRGB(42, 42, 50),
             ["Text"] = FromRGB(200, 200, 208),
@@ -87,7 +87,7 @@ local Library do
 
         TextOutlineThickness = 0,
 
-        MenuKeybind = tostring(Enum.KeyCode.Z),
+        MenuKeybind = tostring(Enum.KeyCode.LeftAlt),
 
         Tween = {
             Time = 0.3,
