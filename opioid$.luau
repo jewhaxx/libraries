@@ -111,6 +111,7 @@ local Library do
             ["Folder"] = { "Folder.png", "https://img.icons8.com/?size=100&id=2yO6UjBrwe5F&format=png&color=FFFFFF" },
             ["Settings"] = { "Settings.png", "https://github.com/jewhaxx/libraries/blob/main/assets/settings.png?raw=true" },
             ["Search"] = { "Search.png", "https://github.com/jewhaxx/libraries/blob/main/assets/search.png?raw=true" },
+            ["Reload"] = { "Reload.png", "https://github.com/jewhaxx/libraries/blob/main/assets/reload.png?raw=true" },
         },
 
         Pages = { },
@@ -7818,20 +7819,21 @@ local Library do
             })
             Items["Title"]:AddToTheme({ TextColor3 = "Text" })
 
-            Items["Refresh"] = Instances:Create("TextButton", {
+            Items["Refresh"] = Instances:Create("ImageButton", {
                 Parent = Items["TitleRow"].Instance,
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(215, 215, 215),
-                Text = "⟳",
+                Name = "\0",
+                Image = Library:GetImage("Reload"),
+                ImageColor3 = FromRGB(215, 215, 215),
                 BackgroundTransparency = 1,
                 AutoButtonColor = false,
                 AnchorPoint = Vector2New(1, 0),
                 Position = UDim2New(1, -20, 0, 0),
-                Size = UDim2New(0, 20, 0, 16),
-                TextSize = 12,
-                BackgroundColor3 = FromRGB(255, 255, 255)
+                Size = UDim2New(0, 18, 0, 18),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255),
+                ScaleType = Enum.ScaleType.Fit
             })
-            Items["Refresh"]:AddToTheme({ TextColor3 = "Accent" })
+            Items["Refresh"]:AddToTheme({ ImageColor3 = "Text" })
 
             Instances:Create("UIStroke", {
                 Parent = Items["TitleRow"].Instance,
