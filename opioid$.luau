@@ -1,8 +1,5 @@
 
--- spanish tech
-
--- this is a public library now, if you paid for it after this date (17/08/2026) then you got scammed
--- HEAVLY based on samets uis
+--
 
 local LoadingTick = os.clock()
 
@@ -67,7 +64,7 @@ local Library do
             ["Page Background"] = FromRGB(32, 32, 38),
             ["Border"] = FromRGB(12, 12, 16),
             ["Outline"] = FromRGB(38, 38, 45),
-            ["Accent"] = FromRGB(185, 208, 250),
+            ["Accent"] = FromRGB(167, 139, 250),
             ["Element"] = FromRGB(32, 32, 38),
             ["Hovered Element"] = FromRGB(42, 42, 50),
             ["Text"] = FromRGB(200, 200, 208),
@@ -87,7 +84,9 @@ local Library do
 
         TextOutlineThickness = 0,
 
-        MenuKeybind = tostring(Enum.KeyCode.LeftAlt),
+        MenuKeybind = tostring(Enum.KeyCode.Z),
+
+        ConfigAPIBase = "",
 
         Tween = {
             Time = 0.3,
@@ -7696,6 +7695,677 @@ local Library do
         }
 
         return Settings
+    end
+
+    Library.CloudConfigs = function(self)
+        local CloudConfigs = {
+            Configs = { },
+            Elements = { }
+        }
+
+        if not writefile or not readfile or not getcustomasset then
+            Library:Notification("Cloud configs require file-system support (writefile/getcustomasset)", 5, FromRGB(220, 90, 90))
+        end
+
+        local ThumbCache = { }
+        local ThumbDir = "neuro-cloud/"
+
+        local GetThumb = function(Config)
+            local Url = Config.thumbnail or ""
+            if Url == "" then return "rbxassetid://0" end
+            local Cached = ThumbCache[Config.id]
+            if Cached then return Cached end
+            local Success, Asset = pcall(function()
+                local FileName = (Config.id or "img") .. ".png"
+                local Path = ThumbDir .. FileName
+                if isfile and isfile(Path) then
+                    return getcustomasset(Path)
+                end
+                local Data = game:HttpGet(Url, true)
+                if #Data == 0 then error("empty download") end
+                writefile(Path, Data)
+                return getcustomasset(Path)
+            end)
+            if Success then
+                ThumbCache[Config.id] = Asset
+                return Asset
+            end
+            return "rbxassetid://0"
+        end
+
+        local Items = { } do
+            Items["Window"] = Instances:Create("Frame", {
+                Parent = Library.Holder.Instance,
+                Size = UDim2New(0, 360, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                Name = "\0",
+                Position = UDim2New(0, 260, 0, 180),
+                BorderColor3 = FromRGB(10, 10, 10),
+                BorderSizePixel = 2,
+                BackgroundColor3 = FromRGB(20, 20, 25)
+            })
+            Items["Window"]:AddToTheme({ BackgroundColor3 = "Inline", BorderColor3 = "Outline" })
+            Library.CloudConfigsFrame = Items["Window"].Instance
+
+            Items["Window"]:MakeDraggable()
+            local CloudStroke = Instances:Create("UIStroke", {
+                Parent = Items["Window"].Instance,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Name = "\0",
+                Color = FromRGB(235, 157, 255)
+            })
+            CloudStroke:AddToTheme({ Color = "Accent" })
+            Library:ApplyAnimatedGradient(CloudStroke.Instance)
+
+            Items["AccentLine"] = Instances:Create("Frame", {
+                Parent = Items["Window"].Instance,
+                BackgroundColor3 = FromRGB(167, 139, 250),
+                BorderColor3 = FromRGB(0, 0, 0),
+                BorderSizePixel = 0,
+                Position = UDim2New(0, 0, 0, -2),
+                Size = UDim2New(1, 0, 0, 2),
+                ZIndex = 2
+            })
+            Items["AccentLine"]:AddToTheme({ BackgroundColor3 = "Accent" })
+
+            Instances:Create("UIGradient", {
+                Parent = Items["AccentLine"].Instance,
+                Rotation = 0,
+                Transparency = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, 1),
+                    NumberSequenceKeypoint.new(0.25, 0),
+                    NumberSequenceKeypoint.new(0.75, 0),
+                    NumberSequenceKeypoint.new(1, 1)
+                })
+            })
+
+            Instances:Create("UIPadding", {
+                Parent = Items["Window"].Instance,
+                PaddingTop = UDimNew(0, 8),
+                PaddingBottom = UDimNew(0, 8),
+                PaddingLeft = UDimNew(0, 8),
+                PaddingRight = UDimNew(0, 8)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["Window"].Instance,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 6)
+            })
+
+            -- Title bar
+            Items["TitleRow"] = Instances:Create("Frame", {
+                Parent = Items["Window"].Instance,
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 16),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Items["Title"] = Instances:Create("TextButton", {
+                Parent = Items["TitleRow"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                Text = "Cloud Configs",
+                BackgroundTransparency = 1,
+                AutoButtonColor = false,
+                Size = UDim2New(1, -70, 0, 16),
+                TextXAlignment = Enum.TextXAlignment.Left,
+                BorderSizePixel = 0,
+                TextSize = 12,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+            Items["Title"]:AddToTheme({ TextColor3 = "Text" })
+
+            Items["Refresh"] = Instances:Create("TextButton", {
+                Parent = Items["TitleRow"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                Text = "⟳",
+                BackgroundTransparency = 1,
+                AutoButtonColor = false,
+                AnchorPoint = Vector2New(1, 0),
+                Position = UDim2New(1, -20, 0, 0),
+                Size = UDim2New(0, 20, 0, 16),
+                TextSize = 12,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+            Items["Refresh"]:AddToTheme({ TextColor3 = "Accent" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["TitleRow"].Instance,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = FromRGB(27, 27, 32)
+            }):AddToTheme({ Color = "Outline" })
+
+            -- Filter bar: Game + Type dropdowns
+            Items["FilterRow"] = Instances:Create("Frame", {
+                Parent = Items["Window"].Instance,
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 24),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["FilterRow"].Instance,
+                FillDirection = Enum.FillDirection.Horizontal,
+                HorizontalFlex = Enum.UIFlexAlignment.Fill,
+                Padding = UDimNew(0, 6),
+                SortOrder = Enum.SortOrder.LayoutOrder
+            })
+
+            local GameFilter = Instances:Create("TextButton", {
+                Parent = Items["FilterRow"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                Text = "Game: All",
+                AutoButtonColor = false,
+                BackgroundColor3 = Library.Theme.Element,
+                BorderColor3 = Library.Theme.Border,
+                BorderSizePixel = 2,
+                Size = UDim2New(0.5, -3, 0, 22),
+                TextSize = 11,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd
+            })
+            GameFilter:AddToTheme({ BackgroundColor3 = "Element", BorderColor3 = "Border", TextColor3 = "Text" })
+
+            Instances:Create("UIPadding", {
+                Parent = GameFilter.Instance,
+                PaddingLeft = UDimNew(0, 6)
+            })
+
+            local TypeFilter = Instances:Create("TextButton", {
+                Parent = Items["FilterRow"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(215, 215, 215),
+                Text = "Type: All",
+                AutoButtonColor = false,
+                BackgroundColor3 = Library.Theme.Element,
+                BorderColor3 = Library.Theme.Border,
+                BorderSizePixel = 2,
+                Size = UDim2New(0.5, -3, 0, 22),
+                TextSize = 11,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                TextTruncate = Enum.TextTruncate.AtEnd
+            })
+            TypeFilter:AddToTheme({ BackgroundColor3 = "Element", BorderColor3 = "Border", TextColor3 = "Text" })
+
+            Instances:Create("UIPadding", {
+                Parent = TypeFilter.Instance,
+                PaddingLeft = UDimNew(0, 6)
+            })
+
+            Items["GameFilter"] = GameFilter
+            Items["TypeFilter"] = TypeFilter
+
+            Items["Status"] = Instances:Create("TextLabel", {
+                Parent = Items["Window"].Instance,
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(140, 140, 148),
+                Text = "Loading configs...",
+                BackgroundTransparency = 1,
+                Size = UDim2New(1, 0, 0, 14),
+                TextXAlignment = Enum.TextXAlignment.Left,
+                BorderSizePixel = 0,
+                TextSize = 11,
+                BackgroundColor3 = FromRGB(255, 255, 255)
+            })
+            Items["Status"]:AddToTheme({ TextColor3 = "Text" })
+
+            Items["Holder"] = InstanceNew("ScrollingFrame")
+            Items["Holder"].Parent = Items["Window"].Instance
+            Items["Holder"].Name = "\0"
+            Items["Holder"].Active = true
+            Items["Holder"].Size = UDim2New(1, 0, 0, 260)
+            Items["Holder"].ScrollBarThickness = 2
+            Items["Holder"].ScrollBarImageColor3 = Library.Theme.Accent
+            Items["Holder"].AutomaticCanvasSize = Enum.AutomaticSize.Y
+            Items["Holder"].CanvasSize = UDim2New(0, 0, 0, 0)
+            Items["Holder"].BackgroundColor3 = Library.Theme.Background
+            Items["Holder"].BorderColor3 = Library.Theme.Border
+            Items["Holder"].BorderSizePixel = 1
+            Items["Holder"].BackgroundTransparency = 0
+
+            Library:AddToTheme(Items["Holder"], { BackgroundColor3 = "Background", BorderColor3 = "Border", ScrollBarImageColor3 = "Accent" })
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Holder"],
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                Color = Library.Theme.Outline
+            })
+
+            Instances:Create("UIPadding", {
+                Parent = Items["Holder"],
+                PaddingTop = UDimNew(0, 4),
+                PaddingBottom = UDimNew(0, 4),
+                PaddingLeft = UDimNew(0, 4),
+                PaddingRight = UDimNew(0, 4)
+            })
+
+            Instances:Create("UIListLayout", {
+                Parent = Items["Holder"],
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDimNew(0, 6)
+            })
+        end
+
+        local TypeLabelMap = {
+            legit = "Legit",
+            rage = "Rage",
+            hvh = "HvH"
+        }
+
+        local BuildCard = function(Config)
+            local Card = InstanceNew("Frame")
+            Card.Parent = Items["Holder"]
+            Card.Name = "\0"
+            Card.BackgroundColor3 = Library.Theme.Background
+            Card.BorderColor3 = Library.Theme.Border
+            Card.BorderSizePixel = 1
+            Card.Size = UDim2New(1, 0, 0, 96)
+            Card.BackgroundTransparency = 0
+
+            Library:AddToTheme(Card, { BackgroundColor3 = "Background", BorderColor3 = "Border" })
+
+            local Stroke = InstanceNew("UIStroke")
+            Stroke.Parent = Card
+            Stroke.Color = Library.Theme.Outline
+            Stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            Stroke.LineJoinMode = Enum.LineJoinMode.Miter
+
+            Instances:Create("UIPadding", {
+                Parent = Card,
+                PaddingTop = UDimNew(0, 5),
+                PaddingBottom = UDimNew(0, 5),
+                PaddingLeft = UDimNew(0, 5),
+                PaddingRight = UDimNew(0, 5)
+            })
+
+            local Thumb = InstanceNew("ImageLabel")
+            Thumb.Parent = Card
+            Thumb.Name = "\0"
+            Thumb.BackgroundColor3 = Library.Theme.Background
+            Thumb.BorderColor3 = Library.Theme.Border
+            Thumb.BorderSizePixel = 1
+            Thumb.Size = UDim2New(0, 86, 0, 86)
+            Thumb.ScaleType = Enum.ScaleType.Fit
+            Thumb.Position = UDim2New(0, 5, 0, 5)
+            Thumb.Image = GetThumb(Config)
+
+            Library:AddToTheme(Thumb, { BackgroundColor3 = "Background", BorderColor3 = "Border" })
+
+            Instances:Create("UIStroke", {
+                Parent = Thumb,
+                Color = Library.Theme.Outline,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+                LineJoinMode = Enum.LineJoinMode.Miter
+            })
+
+            local Title = InstanceNew("TextLabel")
+            Title.Parent = Card
+            Title.Name = "\0"
+            Title.FontFace = Library.Font
+            Title.TextColor3 = Library.Theme.Text
+            Title.Text = Config.title or "Untitled"
+            Title.BackgroundTransparency = 1
+            Title.Size = UDim2New(1, -100, 0, 16)
+            Title.Position = UDim2New(0, 96, 0, 5)
+            Title.TextXAlignment = Enum.TextXAlignment.Left
+            Title.BorderSizePixel = 0
+            Title.TextSize = 13
+            Title.TextTruncate = Enum.TextTruncate.AtEnd
+            Title.BackgroundColor3 = FromRGB(255, 255, 255)
+
+            Library:AddToTheme(Title, { TextColor3 = "Text" })
+
+            local Meta = InstanceNew("TextLabel")
+            Meta.Parent = Card
+            Meta.Name = "\0"
+            Meta.FontFace = Library.Font
+            Meta.TextColor3 = FromRGB(140, 140, 148)
+            Meta.Text = ("%s  •  %s"):format(Config.gameLabel or Config.game or "", Config.author or "Unknown")
+            Meta.BackgroundTransparency = 1
+            Meta.Size = UDim2New(1, -100, 0, 13)
+            Meta.Position = UDim2New(0, 96, 0, 22)
+            Meta.TextXAlignment = Enum.TextXAlignment.Left
+            Meta.BorderSizePixel = 0
+            Meta.TextSize = 11
+            Meta.TextTruncate = Enum.TextTruncate.AtEnd
+            Meta.BackgroundColor3 = FromRGB(255, 255, 255)
+
+            local TypeRow = InstanceNew("Frame")
+            TypeRow.Parent = Card
+            TypeRow.Name = "\0"
+            TypeRow.BackgroundTransparency = 1
+            TypeRow.Size = UDim2New(1, -100, 0, 16)
+            TypeRow.Position = UDim2New(0, 96, 0, 38)
+            TypeRow.BorderSizePixel = 0
+            TypeRow.BackgroundColor3 = FromRGB(255, 255, 255)
+
+            Instances:Create("UIListLayout", {
+                Parent = TypeRow,
+                FillDirection = Enum.FillDirection.Horizontal,
+                Padding = UDimNew(0, 4),
+                SortOrder = Enum.SortOrder.LayoutOrder
+            })
+
+            for _, Type in (Config.types or { }) do
+                local TypeTag = InstanceNew("TextLabel")
+                TypeTag.Parent = TypeRow
+                TypeTag.Name = "\0"
+                TypeTag.FontFace = Library.Font
+                TypeTag.TextColor3 = Library.Theme.Accent
+                TypeTag.Text = TypeLabelMap[Type] or tostring(Type)
+                TypeTag.BackgroundTransparency = 1
+                TypeTag.BorderSizePixel = 2
+                TypeTag.BorderColor3 = Library.Theme.Border
+                TypeTag.Size = UDim2New(0, 44, 0, 15)
+                TypeTag.TextSize = 10
+                TypeTag.Position = UDim2New(0, 0, 0, 0)
+                TypeTag.BackgroundColor3 = FromRGB(255, 255, 255)
+                TypeTag.TextYAlignment = Enum.TextYAlignment.Center
+            end
+
+            local Description = InstanceNew("TextLabel")
+            Description.Parent = Card
+            Description.Name = "\0"
+            Description.FontFace = Library.Font
+            Description.TextColor3 = FromRGB(140, 140, 148)
+            Description.Text = (Config.description and Config.description ~= "") and Config.description or "No description"
+            Description.BackgroundTransparency = 1
+            Description.Size = UDim2New(1, -100, 0, 24)
+            Description.Position = UDim2New(0, 96, 0, 58)
+            Description.TextXAlignment = Enum.TextXAlignment.Left
+            Description.BorderSizePixel = 0
+            Description.TextSize = 11
+            Description.TextTruncate = Enum.TextTruncate.AtEnd
+            Description.BackgroundColor3 = FromRGB(255, 255, 255)
+
+            local Load = InstanceNew("TextButton")
+            Load.Parent = Card
+            Load.Name = "\0"
+            Load.FontFace = Library.Font
+            Load.TextColor3 = Library.Theme.Accent
+            Load.Text = "Load"
+            Load.AutoButtonColor = false
+            Load.BackgroundColor3 = Library.Theme.Element
+            Load.BorderColor3 = Library.Theme.Border
+            Load.BorderSizePixel = 2
+            Load.Size = UDim2New(0, 52, 0, 19)
+            Load.Position = UDim2New(1, -58, 1, -26)
+            Load.TextSize = 12
+            Load.ZIndex = 5
+
+            Library:AddToTheme(Load, { BackgroundColor3 = "Element", BorderColor3 = "Border", TextColor3 = "Accent" })
+
+            Load.MouseButton1Down:Connect(function()
+                local Success, Result = pcall(function()
+                    local Key = getgenv().script_key or script_key or getgenv().config_key or ""
+                    if Key == "" then
+                        error("No config key set")
+                    end
+                    return HttpService:JSONDecode(game:HttpGet(
+                        Library.ConfigAPIBase .. "/api/configs/" .. Config.id .. "?key=" .. HttpService:UrlEncode(Key)
+                    ))
+                end)
+
+                if not Success then
+                    Library:Notification("Failed to load config", 3, FromRGB(220, 90, 90))
+                    return
+                end
+
+                if type(Result) == "table" and Result.ok == false then
+                    Library:Notification("Failed to load config (" .. tostring(Result.error or "unknown") .. ")", 3, FromRGB(220, 90, 90))
+                    return
+                end
+
+                if type(Result) == "table" then
+                    Library:LoadConfig(HttpService:JSONEncode(Result))
+                    Library:Notification("Loaded config: " .. (Config.title or "Untitled"), 3, Library.Theme.Accent)
+                else
+                    Library:Notification("Invalid config data", 3, FromRGB(220, 90, 90))
+                end
+            end)
+        end
+
+        CloudConfigs.CurrentGame = "all"
+        CloudConfigs.CurrentType = "all"
+
+        CloudConfigs.ClearCards = function(self)
+            for _, Child in Items["Holder"]:GetChildren() do
+                if Child:IsA("Frame") then
+                    Child:Destroy()
+                end
+            end
+        end
+
+        CloudConfigs.RenderList = function(self)
+            self:ClearCards()
+            local Count = 0
+            for _, Config in self.Configs do
+                if (self.CurrentGame == "all" or Config.game == self.CurrentGame)
+                    and (self.CurrentType == "all" or (Config.types and TableFind(Config.types, self.CurrentType) ~= nil)) then
+                    BuildCard(Config)
+                    Count = Count + 1
+                end
+            end
+            if Count == 0 then
+                Items["Status"].Instance.Text = "No configs match the filters."
+            else
+                Items["Status"].Instance.Text = ""
+            end
+        end
+
+        CloudConfigs.GetUniqueGames = function(self)
+            local Out = { { value = "all", label = "All" } }
+            local Seen = { }
+            for _, Config in self.Configs do
+                local Id = Config.game
+                if Id and not Seen[Id] then
+                    Seen[Id] = true
+                    TableInsert(Out, { value = Id, label = Config.gameLabel or Id })
+                end
+            end
+            return Out
+        end
+
+        CloudConfigs.GetUniqueTypes = function(self)
+            local Out = { { value = "all", label = "All" } }
+            local Seen = { }
+            local Order = { }
+            for _, Config in self.Configs do
+                for _, Type in (Config.types or { }) do
+                    if Type and not Seen[Type] then
+                        Seen[Type] = true
+                        TableInsert(Order, Type)
+                    end
+                end
+            end
+            for _, Type in Order do
+                TableInsert(Out, { value = Type, label = TypeLabelMap[Type] or Type })
+            end
+            return Out
+        end
+
+        -- Lightweight popup dropdown for game/type filters.
+        local FilterPopup = InstanceNew("Frame")
+        FilterPopup.Parent = Library.Holder.Instance
+        FilterPopup.Name = "\0"
+        FilterPopup.Visible = false
+        FilterPopup.Size = UDim2New(0, 160, 0, 120)
+        FilterPopup.BackgroundColor3 = Library.Theme.Inline
+        FilterPopup.BorderColor3 = Library.Theme.Border
+        FilterPopup.BorderSizePixel = 2
+        FilterPopup.ZIndex = 1000
+        FilterPopup.BackgroundTransparency = 0
+
+        Library:AddToTheme(FilterPopup, { BackgroundColor3 = "Inline", BorderColor3 = "Border" })
+
+        Instances:Create("UIStroke", {
+            Parent = FilterPopup,
+            Color = Library.Theme.Outline,
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            LineJoinMode = Enum.LineJoinMode.Miter
+        })
+
+        Instances:Create("UIPadding", {
+            Parent = FilterPopup,
+            PaddingTop = UDimNew(0, 4),
+            PaddingBottom = UDimNew(0, 4)
+        })
+
+        Instances:Create("UIListLayout", {
+            Parent = FilterPopup,
+            Padding = UDimNew(0, 2),
+            SortOrder = Enum.SortOrder.LayoutOrder
+        })
+
+        local CloseFilterPopup = function()
+            FilterPopup.Visible = false
+            for _, Child in FilterPopup:GetChildren() do
+                if Child:IsA("TextButton") then
+                    Child:Destroy()
+                end
+            end
+        end
+
+        -- Bind an open-options click handler to a filter button ONCE. Options
+        -- and pick-callback are read from a mutable table on each click so the
+        -- dropdown stays current after each refresh.
+        local SetupFilterButton = function(Button, Label)
+            Button.Elements = {
+                Options = { { value = "all", label = "All" } },
+                OnPick = function() end,
+                Current = "all"
+            }
+            Button.Instance.Text = ("%s: %s"):format(Label, "All")
+            Button.Instance.MouseButton1Down:Connect(function()
+                local Meta = Button.Elements
+                if FilterPopup.Visible then
+                    CloseFilterPopup()
+                    return
+                end
+                local Abs = Button.Instance.AbsolutePosition
+                local Size = Button.Instance.AbsoluteSize
+                FilterPopup.Position = UDim2New(0, Abs.X, 0, Abs.Y + Size.Y + 2)
+                FilterPopup.Visible = true
+                if Library.BringToFront then
+                    Library:BringToFront(FilterPopup)
+                end
+                for _, Child in FilterPopup:GetChildren() do
+                    if Child:IsA("TextButton") then
+                        Child:Destroy()
+                    end
+                end
+                for _, Opt in Meta.Options do
+                    -- Options are { value = <match id>, label = <display text> }
+                    local LabelOpt = Opt.label or tostring(Opt)
+                    local ButtonOpt = InstanceNew("TextButton")
+                    ButtonOpt.Parent = FilterPopup
+                    ButtonOpt.Name = "\0"
+                    ButtonOpt.FontFace = Library.Font
+                    ButtonOpt.TextColor3 = (Opt.value == Meta.Current) and Library.Theme.Accent or Library.Theme.Text
+                    ButtonOpt.Text = LabelOpt
+                    ButtonOpt.AutoButtonColor = false
+                    ButtonOpt.BackgroundTransparency = 0
+                    ButtonOpt.BackgroundColor3 = Library.Theme.Inline
+                    ButtonOpt.Size = UDim2New(1, 0, 0, 24)
+                    ButtonOpt.TextSize = 12
+                    ButtonOpt.TextXAlignment = Enum.TextXAlignment.Left
+                    ButtonOpt.BorderSizePixel = 0
+                    ButtonOpt.TextTruncate = Enum.TextTruncate.AtEnd
+                    ButtonOpt.ZIndex = FilterPopup.ZIndex + 1
+                    Library:AddToTheme(ButtonOpt, { BackgroundColor3 = "Inline", TextColor3 = "Text" })
+                    Instances:Create("UIPadding", { Parent = ButtonOpt, PaddingLeft = UDimNew(0, 6) })
+                    ButtonOpt.MouseButton1Down:Connect(function()
+                        CloseFilterPopup()
+                        Meta.OnPick(Opt.value)
+                    end)
+                end
+            end)
+        end
+
+        local UpdateFilterButton = function(Button, Label, Options, Current, OnPick)
+            Button.Elements.Options = Options
+            Button.Elements.Current = Current
+            Button.Elements.OnPick = OnPick
+            local CurrentLabel = "All"
+            for _, Opt in Options do
+                if Opt.value == Current then
+                    CurrentLabel = Opt.label
+                    break
+                end
+            end
+            Button.Instance.Text = ("%s: %s"):format(Label, CurrentLabel)
+        end
+
+        -- Build the game + type filter dropdowns once.
+        SetupFilterButton(Items["GameFilter"], "Game")
+        SetupFilterButton(Items["TypeFilter"], "Type")
+
+        -- (Re)refresh the filter dropdown option lists from loaded configs.
+        CloudConfigs.SetupFilters = function(self)
+            local OnGamePick = function(Opt)
+                self.CurrentGame = Opt
+                self:SetupFilters()
+                self:RenderList()
+            end
+            local OnTypePick = function(Opt)
+                self.CurrentType = Opt
+                self:SetupFilters()
+                self:RenderList()
+            end
+            UpdateFilterButton(Items["GameFilter"], "Game", self:GetUniqueGames(), self.CurrentGame, OnGamePick)
+            UpdateFilterButton(Items["TypeFilter"], "Type", self:GetUniqueTypes(), self.CurrentType, OnTypePick)
+        end
+
+        CloudConfigs.Refresh = function(self)
+            local Success, Result = pcall(function()
+                if not Library.ConfigAPIBase or Library.ConfigAPIBase == "" then
+                    error("Config API base URL not set (Library.ConfigAPIBase)")
+                end
+                local Key = getgenv().script_key or script_key or getgenv().config_key or ""
+                if Key == "" then
+                    error("No config key set (getgenv().script_key)")
+                end
+                return HttpService:JSONDecode(game:HttpGet(
+                    Library.ConfigAPIBase .. "/api/configs?key=" .. HttpService:UrlEncode(Key)
+                ))
+            end)
+
+            if not Success then
+                Items["Status"].Instance.Text = "Failed to load configs (" .. tostring(Result) .. ")"
+                return
+            end
+
+            if not Result or Result.ok ~= true then
+                Items["Status"].Instance.Text = "Failed to load configs (" .. tostring(Result and Result.error or "unknown") .. ")"
+                return
+            end
+
+            self.Configs = Result.configs
+            self:SetupFilters()
+            self:RenderList()
+        end
+
+        CloudConfigs.SetVisibility = function(_, Bool)
+            Items["Window"].Instance.Visible = Bool
+        end
+
+        Items["Refresh"].Instance.MouseButton1Down:Connect(function()
+            CloudConfigs:Refresh()
+        end)
+
+        CloudConfigs.Elements = Items
+        Library.CloudConfigsInstance = CloudConfigs
+
+        task.defer(function() CloudConfigs:Refresh() end)
+
+        return CloudConfigs
     end
 
     local Components = { } do
