@@ -1,5 +1,6 @@
 
 --
+getgenv().Library = nil
 
 local LoadingTick = os.clock()
 
